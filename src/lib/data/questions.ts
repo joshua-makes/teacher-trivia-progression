@@ -257,7 +257,7 @@ export const QUESTIONS: Question[] = [
     id: 'geo-h-1',
     question: 'What is the capital of Kazakhstan?',
     correct: 'Astana',
-    incorrect: ['Almaty', 'Nur-Sultan', 'Shymkent'],
+    incorrect: ['Almaty', 'Karaganda', 'Shymkent'],
     category: 22,
     difficulty: 'hard',
   },
