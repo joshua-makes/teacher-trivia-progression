@@ -1,6 +1,6 @@
 import type { Difficulty } from '@/lib/data/questions'
-
-export type GradeLevel = 'K-2' | '3-5' | '6-8' | '9-12'
+import type { GradeLevel } from '@/lib/data/grades'
+export type { GradeLevel }
 
 export const GRADE_LEVELS: { value: GradeLevel; label: string; emoji: string }[] = [
   { value: 'K-2',  label: 'K–2nd Grade',   emoji: '🌱' },

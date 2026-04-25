@@ -9,7 +9,6 @@ import { TeamScoreboard } from '@/components/quiz/TeamScoreboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { loadSession, saveSession, type Team } from '@/lib/session'
-import { fetchQuestions, decodeHtmlEntities } from '@/lib/opentdb'
 import { QUESTIONS } from '@/lib/data/questions'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, getSafeZonePoints, getTimerSeconds, formatPoints } from '@/lib/ladder'
@@ -55,36 +54,23 @@ export default function QuizPage() {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
 
-  const loadAllQuestions = useCallback(async (catId: number): Promise<QuizQuestion[]> => {
+  const loadAllQuestions = useCallback((catId: number, gradeLevel: string): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
-    const apiResults = await Promise.all(diffs.map(d => fetchQuestions(catId, d, 5)))
-
     const out: QuizQuestion[] = []
-    for (let i = 0; i < 3; i++) {
-      const diff = diffs[i]
-      const api = apiResults[i]
-      if (api && api.length >= 5) {
-        out.push(...api.slice(0, 5).map((q, idx) => ({
-          id: `api-${diff}-${idx}`,
-          question: decodeHtmlEntities(q.question),
-          answers: shuffleArray([
-            decodeHtmlEntities(q.correct_answer),
-            ...q.incorrect_answers.map(decodeHtmlEntities),
-          ]),
-          correctAnswer: decodeHtmlEntities(q.correct_answer),
-          difficulty: diff,
-        })))
-      } else {
-        const local = QUESTIONS.filter(q => q.category === catId && q.difficulty === diff)
-        const pool = local.length >= 5 ? local : QUESTIONS.filter(q => q.difficulty === diff)
-        out.push(...shuffleArray(pool).slice(0, 5).map(q => ({
-          id: q.id,
-          question: q.question,
-          answers: shuffleArray([q.correct, ...q.incorrect]),
-          correctAnswer: q.correct,
-          difficulty: diff,
-        })))
-      }
+    for (const diff of diffs) {
+      const byGrade = QUESTIONS.filter(q =>
+        q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never)
+      )
+      const pool = byGrade.length >= 5
+        ? byGrade
+        : QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never))
+      out.push(...shuffleArray(pool).slice(0, 5).map(q => ({
+        id: q.id,
+        question: q.question,
+        answers: shuffleArray([q.correct, ...q.incorrect]),
+        correctAnswer: q.correct,
+        difficulty: diff,
+      })))
     }
     return out
   }, [])
@@ -96,9 +82,9 @@ export default function QuizPage() {
     setCurrentRung(1)
     setTeams(sess.teams ? [...sess.teams] : [])
     setCurrentTeamIndex(0)
-    loadAllQuestions(sess.categoryId)
-      .then(qs => { setAllQuestions(qs); setGameState('playing') })
-      .catch(() => setGameState('error'))
+    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel)
+    setAllQuestions(qs)
+    setGameState('playing')
     return () => clearTimer()
   }, [router, loadAllQuestions])
 

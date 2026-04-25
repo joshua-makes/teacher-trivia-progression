@@ -1,3 +1,5 @@
+﻿import type { GradeLevel } from '@/lib/data/grades'
+
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
 export type Question = {
@@ -7,532 +9,308 @@ export type Question = {
   incorrect: string[]
   category: number
   difficulty: Difficulty
+  grades: GradeLevel[]
 }
 
+// Category IDs:
+//  9  General Knowledge   17  Science & Nature   19  Mathematics
+// 27  Animals             22  Geography          23  History
+// 21  Sports              12  Music              25  Art
+// 18  Technology          20  Mythology          11  Movies & TV
+
 export const QUESTIONS: Question[] = [
-  // General Knowledge (9) - Easy
-  {
-    id: 'gk-e-1',
-    question: 'What is the capital of France?',
-    correct: 'Paris',
-    incorrect: ['London', 'Berlin', 'Madrid'],
-    category: 9,
-    difficulty: 'easy',
-  },
-  {
-    id: 'gk-e-2',
-    question: 'How many sides does a hexagon have?',
-    correct: '6',
-    incorrect: ['5', '7', '8'],
-    category: 9,
-    difficulty: 'easy',
-  },
-  {
-    id: 'gk-e-3',
-    question: 'What color do you get when you mix red and white?',
-    correct: 'Pink',
-    incorrect: ['Orange', 'Purple', 'Yellow'],
-    category: 9,
-    difficulty: 'easy',
-  },
-  {
-    id: 'gk-e-4',
-    question: 'What is the largest planet in our solar system?',
-    correct: 'Jupiter',
-    incorrect: ['Saturn', 'Neptune', 'Earth'],
-    category: 9,
-    difficulty: 'easy',
-  },
-  {
-    id: 'gk-e-5',
-    question: 'How many minutes are in an hour?',
-    correct: '60',
-    incorrect: ['30', '100', '45'],
-    category: 9,
-    difficulty: 'easy',
-  },
-  // General Knowledge - Medium
-  {
-    id: 'gk-m-1',
-    question: 'Which element has the chemical symbol Au?',
-    correct: 'Gold',
-    incorrect: ['Silver', 'Copper', 'Iron'],
-    category: 9,
-    difficulty: 'medium',
-  },
-  {
-    id: 'gk-m-2',
-    question: 'In which year did World War II end?',
-    correct: '1945',
-    incorrect: ['1944', '1943', '1946'],
-    category: 9,
-    difficulty: 'medium',
-  },
-  {
-    id: 'gk-m-3',
-    question: 'Which country has the most natural lakes?',
-    correct: 'Canada',
-    incorrect: ['Russia', 'USA', 'Brazil'],
-    category: 9,
-    difficulty: 'medium',
-  },
-  // General Knowledge - Hard
-  {
-    id: 'gk-h-1',
-    question: 'What is the speed of light in a vacuum (approximately)?',
-    correct: '299,792,458 m/s',
-    incorrect: ['300,000,000 m/s', '186,000 m/s', '150,000,000 m/s'],
-    category: 9,
-    difficulty: 'hard',
-  },
-  {
-    id: 'gk-h-2',
-    question: 'Which organ produces insulin in the human body?',
-    correct: 'Pancreas',
-    incorrect: ['Liver', 'Kidney', 'Spleen'],
-    category: 9,
-    difficulty: 'hard',
-  },
-  // Science & Nature (17) - Easy
-  {
-    id: 'sci-e-1',
-    question: 'What gas do plants absorb from the atmosphere?',
-    correct: 'Carbon dioxide',
-    incorrect: ['Oxygen', 'Nitrogen', 'Hydrogen'],
-    category: 17,
-    difficulty: 'easy',
-  },
-  {
-    id: 'sci-e-2',
-    question: 'How many legs does a spider have?',
-    correct: '8',
-    incorrect: ['6', '10', '4'],
-    category: 17,
-    difficulty: 'easy',
-  },
-  // Science - Medium
-  {
-    id: 'sci-m-1',
-    question: 'What is the powerhouse of the cell?',
-    correct: 'Mitochondria',
-    incorrect: ['Nucleus', 'Ribosome', 'Vacuole'],
-    category: 17,
-    difficulty: 'medium',
-  },
-  {
-    id: 'sci-m-2',
-    question: 'What is the atomic number of Carbon?',
-    correct: '6',
-    incorrect: ['8', '12', '4'],
-    category: 17,
-    difficulty: 'medium',
-  },
-  // Science - Hard
-  {
-    id: 'sci-h-1',
-    question: 'What is the Heisenberg Uncertainty Principle about?',
-    correct: 'You cannot simultaneously know the exact position and momentum of a particle',
-    incorrect: [
-      'Energy cannot be created or destroyed',
-      'Every action has an equal and opposite reaction',
-      'Objects in motion stay in motion',
-    ],
-    category: 17,
-    difficulty: 'hard',
-  },
-  // Computers (18) - Easy
-  {
-    id: 'comp-e-1',
-    question: 'What does CPU stand for?',
-    correct: 'Central Processing Unit',
-    incorrect: ['Central Power Unit', 'Computer Processing Unit', 'Core Processing Unit'],
-    category: 18,
-    difficulty: 'easy',
-  },
-  {
-    id: 'comp-e-2',
-    question: 'Which company created the iPhone?',
-    correct: 'Apple',
-    incorrect: ['Samsung', 'Google', 'Microsoft'],
-    category: 18,
-    difficulty: 'easy',
-  },
-  // Computers - Medium
-  {
-    id: 'comp-m-1',
-    question: 'What does HTML stand for?',
-    correct: 'HyperText Markup Language',
-    incorrect: ['HyperText Machine Language', 'HyperText Making Language', 'HighText Markup Language'],
-    category: 18,
-    difficulty: 'medium',
-  },
-  {
-    id: 'comp-m-2',
-    question: 'What programming language is known as the "language of the web"?',
-    correct: 'JavaScript',
-    incorrect: ['Python', 'Java', 'C++'],
-    category: 18,
-    difficulty: 'medium',
-  },
-  // Computers - Hard
-  {
-    id: 'comp-h-1',
-    question: 'What is the time complexity of a binary search algorithm?',
-    correct: 'O(log n)',
-    incorrect: ['O(n)', 'O(n²)', 'O(1)'],
-    category: 18,
-    difficulty: 'hard',
-  },
-  // Sports (21) - Easy
-  {
-    id: 'sport-e-1',
-    question: 'How many players are on a standard soccer team?',
-    correct: '11',
-    incorrect: ['9', '10', '12'],
-    category: 21,
-    difficulty: 'easy',
-  },
-  {
-    id: 'sport-e-2',
-    question: 'Which sport uses a shuttlecock?',
-    correct: 'Badminton',
-    incorrect: ['Tennis', 'Squash', 'Volleyball'],
-    category: 21,
-    difficulty: 'easy',
-  },
-  // Sports - Medium
-  {
-    id: 'sport-m-1',
-    question: 'In which country did the 2016 Summer Olympics take place?',
-    correct: 'Brazil',
-    incorrect: ['UK', 'China', 'Japan'],
-    category: 21,
-    difficulty: 'medium',
-  },
-  {
-    id: 'sport-m-2',
-    question: 'How many points is a touchdown worth in American Football?',
-    correct: '6',
-    incorrect: ['7', '3', '4'],
-    category: 21,
-    difficulty: 'medium',
-  },
-  // Sports - Hard
-  {
-    id: 'sport-h-1',
-    question: 'Which country has won the most FIFA World Cup titles?',
-    correct: 'Brazil',
-    incorrect: ['Germany', 'Italy', 'Argentina'],
-    category: 21,
-    difficulty: 'hard',
-  },
-  // Geography (22) - Easy
-  {
-    id: 'geo-e-1',
-    question: 'What is the largest continent?',
-    correct: 'Asia',
-    incorrect: ['Africa', 'North America', 'Europe'],
-    category: 22,
-    difficulty: 'easy',
-  },
-  {
-    id: 'geo-e-2',
-    question: 'Which river is the longest in the world?',
-    correct: 'The Nile',
-    incorrect: ['The Amazon', 'The Mississippi', 'The Yangtze'],
-    category: 22,
-    difficulty: 'easy',
-  },
-  // Geography - Medium
-  {
-    id: 'geo-m-1',
-    question: 'What is the smallest country in the world?',
-    correct: 'Vatican City',
-    incorrect: ['Monaco', 'San Marino', 'Liechtenstein'],
-    category: 22,
-    difficulty: 'medium',
-  },
-  // Geography - Hard
-  {
-    id: 'geo-h-1',
-    question: 'What is the capital of Kazakhstan?',
-    correct: 'Astana',
-    incorrect: ['Almaty', 'Karaganda', 'Shymkent'],
-    category: 22,
-    difficulty: 'hard',
-  },
-  // History (23) - Easy
-  {
-    id: 'hist-e-1',
-    question: 'Who was the first President of the United States?',
-    correct: 'George Washington',
-    incorrect: ['Abraham Lincoln', 'Thomas Jefferson', 'John Adams'],
-    category: 23,
-    difficulty: 'easy',
-  },
-  // History - Medium
-  {
-    id: 'hist-m-1',
-    question: 'In which year did the Berlin Wall fall?',
-    correct: '1989',
-    incorrect: ['1991', '1987', '1993'],
-    category: 23,
-    difficulty: 'medium',
-  },
-  // History - Hard
-  {
-    id: 'hist-h-1',
-    question: 'Which empire was ruled by Genghis Khan?',
-    correct: 'Mongol Empire',
-    incorrect: ['Ottoman Empire', 'Roman Empire', 'Han Dynasty'],
-    category: 23,
-    difficulty: 'hard',
-  },
-  // Art (25) - Easy
-  {
-    id: 'art-e-1',
-    question: 'Who painted the Mona Lisa?',
-    correct: 'Leonardo da Vinci',
-    incorrect: ['Michelangelo', 'Raphael', 'Caravaggio'],
-    category: 25,
-    difficulty: 'easy',
-  },
-  // Art - Medium
-  {
-    id: 'art-m-1',
-    question: 'In which museum is the Mona Lisa housed?',
-    correct: 'The Louvre',
-    incorrect: ['The Uffizi', 'The Prado', 'The Metropolitan'],
-    category: 25,
-    difficulty: 'medium',
-  },
-  // Art - Hard
-  {
-    id: 'art-h-1',
-    question: 'Who sculpted "The Thinker"?',
-    correct: 'Auguste Rodin',
-    incorrect: ['Michelangelo', 'Donatello', 'Bernini'],
-    category: 25,
-    difficulty: 'hard',
-  },
-  // Animals (27) - Easy
-  {
-    id: 'anim-e-1',
-    question: 'What is the fastest land animal?',
-    correct: 'Cheetah',
-    incorrect: ['Lion', 'Horse', 'Greyhound'],
-    category: 27,
-    difficulty: 'easy',
-  },
-  {
-    id: 'anim-e-2',
-    question: 'How many hearts does an octopus have?',
-    correct: '3',
-    incorrect: ['1', '2', '4'],
-    category: 27,
-    difficulty: 'easy',
-  },
-  // Animals - Medium
-  {
-    id: 'anim-m-1',
-    question: 'What is the largest species of shark?',
-    correct: 'Whale shark',
-    incorrect: ['Great white shark', 'Hammerhead shark', 'Bull shark'],
-    category: 27,
-    difficulty: 'medium',
-  },
-  // Animals - Hard
-  {
-    id: 'anim-h-1',
-    question: 'What is the gestation period of an elephant?',
-    correct: '22 months',
-    incorrect: ['12 months', '18 months', '9 months'],
-    category: 27,
-    difficulty: 'hard',
-  },
-  {
-    id: 'anim-h-2',
-    question: 'Which bird has the largest wingspan?',
-    correct: 'Wandering albatross',
-    incorrect: ['Condor', 'Eagle', 'Pelican'],
-    category: 27,
-    difficulty: 'hard',
-  },
-  // Mathematics (19) - Easy
-  {
-    id: 'math-e-1',
-    question: 'What is 7 × 8?',
-    correct: '56',
-    incorrect: ['54', '63', '48'],
-    category: 19,
-    difficulty: 'easy',
-  },
-  {
-    id: 'math-e-2',
-    question: 'What is 15 + 27?',
-    correct: '42',
-    incorrect: ['41', '43', '40'],
-    category: 19,
-    difficulty: 'easy',
-  },
-  {
-    id: 'math-e-3',
-    question: 'How many sides does a triangle have?',
-    correct: '3',
-    incorrect: ['4', '5', '6'],
-    category: 19,
-    difficulty: 'easy',
-  },
-  {
-    id: 'math-e-4',
-    question: 'What is half of 100?',
-    correct: '50',
-    incorrect: ['25', '40', '60'],
-    category: 19,
-    difficulty: 'easy',
-  },
-  {
-    id: 'math-e-5',
-    question: 'What is 9 × 9?',
-    correct: '81',
-    incorrect: ['72', '90', '64'],
-    category: 19,
-    difficulty: 'easy',
-  },
-  // Mathematics - Medium
-  {
-    id: 'math-m-1',
-    question: 'What is the square root of 144?',
-    correct: '12',
-    incorrect: ['11', '13', '14'],
-    category: 19,
-    difficulty: 'medium',
-  },
-  {
-    id: 'math-m-2',
-    question: 'What is 15% of 200?',
-    correct: '30',
-    incorrect: ['25', '35', '20'],
-    category: 19,
-    difficulty: 'medium',
-  },
-  {
-    id: 'math-m-3',
-    question: 'What is the value of π (pi) to two decimal places?',
-    correct: '3.14',
-    incorrect: ['3.12', '3.16', '3.18'],
-    category: 19,
-    difficulty: 'medium',
-  },
-  {
-    id: 'math-m-4',
-    question: 'What is 2³ (2 to the power of 3)?',
-    correct: '8',
-    incorrect: ['6', '9', '12'],
-    category: 19,
-    difficulty: 'medium',
-  },
-  {
-    id: 'math-m-5',
-    question: 'How many degrees are in a right angle?',
-    correct: '90',
-    incorrect: ['45', '180', '60'],
-    category: 19,
-    difficulty: 'medium',
-  },
-  // Mathematics - Hard
-  {
-    id: 'math-h-1',
-    question: 'What is the sum of interior angles of a hexagon?',
-    correct: '720°',
-    incorrect: ['540°', '900°', '360°'],
-    category: 19,
-    difficulty: 'hard',
-  },
-  {
-    id: 'math-h-2',
-    question: 'If f(x) = x² + 3x + 2, what is f(4)?',
-    correct: '30',
-    incorrect: ['24', '26', '28'],
-    category: 19,
-    difficulty: 'hard',
-  },
-  {
-    id: 'math-h-3',
-    question: 'What is the least common multiple (LCM) of 8 and 12?',
-    correct: '24',
-    incorrect: ['16', '48', '96'],
-    category: 19,
-    difficulty: 'hard',
-  },
-  // Music (12) - Easy
-  {
-    id: 'mus-e-1',
-    question: 'How many strings does a standard guitar have?',
-    correct: '6',
-    incorrect: ['4', '5', '7'],
-    category: 12,
-    difficulty: 'easy',
-  },
-  {
-    id: 'mus-e-2',
-    question: 'Which instrument has keys, strings, and hammers inside?',
-    correct: 'Piano',
-    incorrect: ['Organ', 'Harpsichord', 'Accordion'],
-    category: 12,
-    difficulty: 'easy',
-  },
-  // Music - Medium
-  {
-    id: 'mus-m-1',
-    question: 'How many notes are in an octave?',
-    correct: '8',
-    incorrect: ['7', '10', '12'],
-    category: 12,
-    difficulty: 'medium',
-  },
-  {
-    id: 'mus-m-2',
-    question: 'Which composer wrote "Symphony No. 5" in C minor?',
-    correct: 'Beethoven',
-    incorrect: ['Mozart', 'Bach', 'Schubert'],
-    category: 12,
-    difficulty: 'medium',
-  },
-  // Music - Hard
-  {
-    id: 'mus-h-1',
-    question: 'What time signature is commonly known as "common time"?',
-    correct: '4/4',
-    incorrect: ['3/4', '6/8', '2/4'],
-    category: 12,
-    difficulty: 'hard',
-  },
-  // Mythology (20) - Easy
-  {
-    id: 'myth-e-1',
-    question: 'Who is the king of the Greek gods?',
-    correct: 'Zeus',
-    incorrect: ['Poseidon', 'Hades', 'Apollo'],
-    category: 20,
-    difficulty: 'easy',
-  },
-  // Mythology - Medium
-  {
-    id: 'myth-m-1',
-    question: 'In Greek mythology, who flew too close to the sun with wax wings?',
-    correct: 'Icarus',
-    incorrect: ['Daedalus', 'Hermes', 'Perseus'],
-    category: 20,
-    difficulty: 'medium',
-  },
-  // Mythology - Hard
-  {
-    id: 'myth-h-1',
-    question: 'In Norse mythology, what is the name of the world tree?',
-    correct: 'Yggdrasil',
-    incorrect: ['Mjolnir', 'Valhalla', 'Bifrost'],
-    category: 20,
-    difficulty: 'hard',
-  },
+
+  // ===========================================================================
+  // 9  GENERAL KNOWLEDGE
+  // ===========================================================================
+  { id:'gk-e-1',  question:'How many days are in a week?',                          correct:'7',                             incorrect:['5','6','8'],                                                                   category:9,  difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'gk-e-2',  question:'What color is the sky on a clear day?',                 correct:'Blue',                          incorrect:['Green','Red','Yellow'],                                                         category:9,  difficulty:'easy',   grades:['K-2'] },
+  { id:'gk-e-3',  question:'How many months are in a year?',                        correct:'12',                            incorrect:['10','8','6'],                                                                   category:9,  difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'gk-e-4',  question:'Which meal do most people eat in the morning?',         correct:'Breakfast',                     incorrect:['Lunch','Dinner','Snack'],                                                       category:9,  difficulty:'easy',   grades:['K-2'] },
+  { id:'gk-e-5',  question:'What do you use to write on a chalkboard?',             correct:'Chalk',                         incorrect:['Pencil','Marker','Paint'],                                                      category:9,  difficulty:'easy',   grades:['K-2'] },
+  { id:'gk-e-6',  question:'How many wheels does a tricycle have?',                 correct:'3',                             incorrect:['2','4','1'],                                                                    category:9,  difficulty:'easy',   grades:['K-2'] },
+  { id:'gk-e-7',  question:'What is the capital of France?',                        correct:'Paris',                         incorrect:['London','Berlin','Madrid'],                                                     category:9,  difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'gk-e-8',  question:'How many sides does a stop sign have?',                 correct:'8',                             incorrect:['4','6','3'],                                                                    category:9,  difficulty:'easy',   grades:['3-5'] },
+  { id:'gk-e-9',  question:'What planet do we live on?',                            correct:'Earth',                         incorrect:['Mars','Venus','Jupiter'],                                                       category:9,  difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'gk-e-10', question:'Which season comes after summer?',                      correct:'Fall / Autumn',                 incorrect:['Winter','Spring','Summer'],                                                     category:9,  difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'gk-e-11', question:'What shape has four equal sides?',                      correct:'Square',                        incorrect:['Rectangle','Triangle','Circle'],                                                category:9,  difficulty:'easy',   grades:['K-2'] },
+  { id:'gk-e-12', question:'What is the largest ocean on Earth?',                   correct:'Pacific Ocean',                 incorrect:['Atlantic Ocean','Indian Ocean','Arctic Ocean'],                                 category:9,  difficulty:'easy',   grades:['3-5','6-8'] },
+
+  { id:'gk-m-1',  question:'Which element has the symbol O?',                       correct:'Oxygen',                        incorrect:['Gold','Iron','Silver'],                                                         category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'gk-m-2',  question:'Which country has the most natural lakes?',             correct:'Canada',                        incorrect:['Russia','USA','Brazil'],                                                        category:9,  difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'gk-m-3',  question:'How many stripes are on the US flag?',                  correct:'13',                            incorrect:['15','10','50'],                                                                 category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'gk-m-4',  question:'What is the longest river in the world?',               correct:'The Nile',                      incorrect:['The Amazon','The Mississippi','The Yangtze'],                                   category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'gk-m-5',  question:'What is the name of the force that pulls objects toward Earth?', correct:'Gravity',              incorrect:['Magnetism','Friction','Inertia'],                                               category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'gk-m-6',  question:'What gas do plants produce during photosynthesis?',     correct:'Oxygen',                        incorrect:['Carbon dioxide','Nitrogen','Hydrogen'],                                         category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'gk-m-7',  question:'In which year did the Titanic sink?',                   correct:'1912',                          incorrect:['1905','1920','1898'],                                                           category:9,  difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'gk-m-8',  question:'What is the tallest mountain in the world?',            correct:'Mount Everest',                 incorrect:['K2','Kangchenjunga','Mont Blanc'],                                              category:9,  difficulty:'medium', grades:['3-5','6-8'] },
+
+  { id:'gk-h-1',  question:'What is the approximate speed of light?',              correct:'300,000 km/s',                  incorrect:['150,000 km/s','500,000 km/s','1,000 km/s'],                                    category:9,  difficulty:'hard',   grades:['9-12'] },
+  { id:'gk-h-2',  question:'Which organ in the human body produces insulin?',       correct:'Pancreas',                      incorrect:['Liver','Kidney','Spleen'],                                                      category:9,  difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'gk-h-3',  question:'What is the most spoken language in the world?',        correct:'Mandarin Chinese',              incorrect:['English','Spanish','Hindi'],                                                    category:9,  difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'gk-h-4',  question:'What is the smallest country in the world?',            correct:'Vatican City',                  incorrect:['Monaco','San Marino','Liechtenstein'],                                          category:9,  difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'gk-h-5',  question:'How many bones are in an adult human body?',            correct:'206',                           incorrect:['212','196','180'],                                                              category:9,  difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'gk-h-6',  question:'What is the chemical symbol for gold?',                 correct:'Au',                            incorrect:['Ag','Go','Gd'],                                                                 category:9,  difficulty:'hard',   grades:['6-8','9-12'] },
+
+  // ===========================================================================
+  // 17  SCIENCE & NATURE
+  // ===========================================================================
+  { id:'sci-e-1',  question:'What do plants need from the sun to grow?',            correct:'Light',                         incorrect:['Rain','Wind','Snow'],                                                           category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-2',  question:'How many legs does a spider have?',                    correct:'8',                             incorrect:['6','10','4'],                                                                   category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-3',  question:'What gas do we breathe in to stay alive?',             correct:'Oxygen',                        incorrect:['Carbon dioxide','Nitrogen','Hydrogen'],                                         category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-4',  question:'What do caterpillars turn into?',                      correct:'Butterflies or moths',          incorrect:['Beetles','Dragonflies','Grasshoppers'],                                         category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-5',  question:'What is the center of our solar system?',              correct:'The Sun',                       incorrect:['Earth','The Moon','Jupiter'],                                                   category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-6',  question:'What state of matter is ice?',                         correct:'Solid',                         incorrect:['Liquid','Gas','Plasma'],                                                        category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'sci-e-7',  question:'What is the boiling point of water?',                  correct:'100°C / 212°F',                 incorrect:['0°C / 32°F','50°C / 122°F','150°C / 302°F'],                                  category:17, difficulty:'easy',   grades:['3-5'] },
+  { id:'sci-e-8',  question:'How many planets are in our solar system?',            correct:'8',                             incorrect:['7','9','10'],                                                                   category:17, difficulty:'easy',   grades:['K-2','3-5'] },
+
+  { id:'sci-m-1',  question:'What is the powerhouse of the cell?',                  correct:'Mitochondria',                  incorrect:['Nucleus','Ribosome','Vacuole'],                                                 category:17, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sci-m-2',  question:'What is the atomic number of carbon?',                 correct:'6',                             incorrect:['8','12','4'],                                                                   category:17, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sci-m-3',  question:'Which planet is known as the Red Planet?',             correct:'Mars',                          incorrect:['Jupiter','Saturn','Venus'],                                                     category:17, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'sci-m-4',  question:'What force keeps planets in orbit around the Sun?',    correct:'Gravity',                       incorrect:['Magnetism','Friction','Electrostatic force'],                                   category:17, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sci-m-5',  question:'What is the process by which water turns into vapor?', correct:'Evaporation',                   incorrect:['Condensation','Precipitation','Sublimation'],                                   category:17, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'sci-m-6',  question:'What type of rock is formed from cooled lava?',        correct:'Igneous',                       incorrect:['Sedimentary','Metamorphic','Limestone'],                                        category:17, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sci-m-7',  question:'What is the closest star to Earth (other than the Sun)?', correct:'Proxima Centauri',           incorrect:['Sirius','Alpha Centauri A','Betelgeuse'],                                       category:17, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sci-m-8',  question:'Which gas makes up most of Earth\'s atmosphere?',      correct:'Nitrogen',                      incorrect:['Oxygen','Carbon dioxide','Argon'],                                              category:17, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'sci-h-1',  question:'Which subatomic particle has a negative charge?',      correct:'Electron',                      incorrect:['Proton','Neutron','Photon'],                                                    category:17, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'sci-h-2',  question:'What is the chemical formula for glucose?',            correct:'C6H12O6',                       incorrect:['CO2','H2O','C12H22O11'],                                                       category:17, difficulty:'hard',   grades:['9-12'] },
+  { id:'sci-h-3',  question:'What does DNA stand for?',                             correct:'Deoxyribonucleic acid',          incorrect:['Dioxyribonucleic acid','Dual nucleic acid','Dynamic nitrogen acid'],             category:17, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'sci-h-4',  question:'What is the pH of pure water?',                        correct:'7',                             incorrect:['1','5','14'],                                                                   category:17, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'sci-h-5',  question:'What law states that energy cannot be created or destroyed?', correct:'Law of Conservation of Energy', incorrect:['Newton\'s Second Law','Ohm\'s Law','Boyle\'s Law'],                    category:17, difficulty:'hard',   grades:['9-12'] },
+  { id:'sci-h-6',  question:'What is the half-life of a radioactive element?',      correct:'Time for half the atoms to decay', incorrect:['Time for all atoms to decay','Rate of energy release','Time for atoms to split'], category:17, difficulty:'hard', grades:['9-12'] },
+
+  // ===========================================================================
+  // 19  MATHEMATICS
+  // ===========================================================================
+  { id:'math-e-1',  question:'What is 3 + 4?',                                      correct:'7',                             incorrect:['8','6','5'],                                                                   category:19, difficulty:'easy',   grades:['K-2'] },
+  { id:'math-e-2',  question:'What is 10 minus 3?',                                 correct:'7',                             incorrect:['6','8','5'],                                                                   category:19, difficulty:'easy',   grades:['K-2'] },
+  { id:'math-e-3',  question:'How many sides does a triangle have?',                correct:'3',                             incorrect:['4','5','6'],                                                                    category:19, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'math-e-4',  question:'What is half of 20?',                                 correct:'10',                            incorrect:['5','15','8'],                                                                   category:19, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'math-e-5',  question:'What is 5 times 2?',                                  correct:'10',                            incorrect:['12','8','15'],                                                                  category:19, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'math-e-6',  question:'What is 7 times 8?',                                  correct:'56',                            incorrect:['54','63','48'],                                                                 category:19, difficulty:'easy',   grades:['3-5'] },
+  { id:'math-e-7',  question:'How many zeros are in one hundred?',                  correct:'2',                             incorrect:['1','3','0'],                                                                    category:19, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'math-e-8',  question:'What comes next: 2, 4, 6, 8, ___?',                  correct:'10',                            incorrect:['9','11','12'],                                                                  category:19, difficulty:'easy',   grades:['K-2','3-5'] },
+
+  { id:'math-m-1',  question:'What is the square root of 64?',                      correct:'8',                             incorrect:['6','7','9'],                                                                    category:19, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'math-m-2',  question:'What is 15 percent of 200?',                          correct:'30',                            incorrect:['25','35','20'],                                                                 category:19, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'math-m-3',  question:'What is the value of pi to two decimal places?',      correct:'3.14',                          incorrect:['3.12','3.16','2.71'],                                                           category:19, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'math-m-4',  question:'What is 2 to the power of 3?',                        correct:'8',                             incorrect:['6','9','12'],                                                                   category:19, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'math-m-5',  question:'How many degrees are in a right angle?',              correct:'90',                            incorrect:['45','180','60'],                                                                category:19, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'math-m-6',  question:'What is the area of a 4m by 6m rectangle?',           correct:'24 square meters',              incorrect:['20 sq m','18 sq m','10 sq m'],                                                  category:19, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'math-m-7',  question:'What is 120 divided by 8?',                           correct:'15',                            incorrect:['12','14','16'],                                                                 category:19, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'math-m-8',  question:'Which fraction is larger: one-half or one-third?',    correct:'One-half (1/2)',                 incorrect:['One-third (1/3)','They are equal','Cannot be compared'],                        category:19, difficulty:'medium', grades:['3-5','6-8'] },
+
+  { id:'math-h-1',  question:'What is the sum of interior angles of a hexagon?',    correct:'720 degrees',                   incorrect:['540 degrees','900 degrees','360 degrees'],                                      category:19, difficulty:'hard',   grades:['9-12'] },
+  { id:'math-h-2',  question:'If f(x) = x squared + 3x + 2, what is f(4)?',         correct:'30',                            incorrect:['24','26','28'],                                                                 category:19, difficulty:'hard',   grades:['9-12'] },
+  { id:'math-h-3',  question:'What is the least common multiple of 8 and 12?',      correct:'24',                            incorrect:['16','48','96'],                                                                 category:19, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'math-h-4',  question:'Solve for x: 3x + 7 = 22',                            correct:'x = 5',                         incorrect:['x = 4','x = 6','x = 7'],                                                       category:19, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'math-h-5',  question:'What does the Pythagorean theorem state?',             correct:'a squared + b squared = c squared', incorrect:['a + b = c','a squared minus b squared = c squared','2 pi r squared'],    category:19, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'math-h-6',  question:'What is the probability of rolling an even number on a die?', correct:'1/2',                  incorrect:['1/3','2/3','1/4'],                                                              category:19, difficulty:'hard',   grades:['6-8','9-12'] },
+
+  // ===========================================================================
+  // 27  ANIMALS
+  // ===========================================================================
+  { id:'anim-e-1',  question:'What sound does a cow make?',                         correct:'Moo',                           incorrect:['Oink','Baa','Cluck'],                                                           category:27, difficulty:'easy',   grades:['K-2'] },
+  { id:'anim-e-2',  question:'What is the fastest land animal?',                    correct:'Cheetah',                       incorrect:['Lion','Horse','Greyhound'],                                                     category:27, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'anim-e-3',  question:'What do bees produce?',                               correct:'Honey',                         incorrect:['Milk','Wax only','Silk'],                                                       category:27, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'anim-e-4',  question:'How many legs does a cat have?',                      correct:'4',                             incorrect:['2','6','8'],                                                                    category:27, difficulty:'easy',   grades:['K-2'] },
+  { id:'anim-e-5',  question:'Which animal is known as man\'s best friend?',        correct:'Dog',                           incorrect:['Cat','Horse','Rabbit'],                                                         category:27, difficulty:'easy',   grades:['K-2'] },
+  { id:'anim-e-6',  question:'What type of animal is a frog?',                      correct:'Amphibian',                     incorrect:['Reptile','Mammal','Fish'],                                                      category:27, difficulty:'easy',   grades:['3-5'] },
+  { id:'anim-e-7',  question:'How many hearts does an octopus have?',               correct:'3',                             incorrect:['1','2','4'],                                                                    category:27, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'anim-e-8',  question:'What is a baby kangaroo called?',                     correct:'Joey',                          incorrect:['Cub','Pup','Foal'],                                                             category:27, difficulty:'easy',   grades:['3-5'] },
+
+  { id:'anim-m-1',  question:'What is the largest species of shark?',               correct:'Whale shark',                   incorrect:['Great white shark','Hammerhead shark','Bull shark'],                             category:27, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'anim-m-2',  question:'Which bird cannot fly?',                              correct:'Ostrich',                       incorrect:['Eagle','Parrot','Hummingbird'],                                                 category:27, difficulty:'medium', grades:['K-2','3-5'] },
+  { id:'anim-m-3',  question:'How do fish breathe underwater?',                     correct:'Through gills',                 incorrect:['Through lungs','Through their skin','They hold their breath'],                   category:27, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'anim-m-4',  question:'What is the largest land animal?',                    correct:'African elephant',              incorrect:['Giraffe','Hippopotamus','White rhino'],                                         category:27, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'anim-m-5',  question:'What is a group of wolves called?',                   correct:'A pack',                        incorrect:['A pride','A herd','A flock'],                                                   category:27, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'anim-m-6',  question:'Which mammal can truly fly?',                         correct:'Bat',                           incorrect:['Flying squirrel','Flying fish','Sugar glider'],                                 category:27, difficulty:'medium', grades:['3-5','6-8'] },
+
+  { id:'anim-h-1',  question:'What is the gestation period of an elephant?',        correct:'22 months',                     incorrect:['12 months','18 months','9 months'],                                             category:27, difficulty:'hard',   grades:['6-8'] },
+  { id:'anim-h-2',  question:'Which bird has the largest wingspan?',                correct:'Wandering albatross',            incorrect:['Condor','Bald eagle','Pelican'],                                                category:27, difficulty:'hard',   grades:['6-8'] },
+  { id:'anim-h-3',  question:'What is the scientific study of insects called?',     correct:'Entomology',                    incorrect:['Ornithology','Herpetology','Ichthyology'],                                      category:27, difficulty:'hard',   grades:['6-8'] },
+  { id:'anim-h-4',  question:'What is unusual about the platypus as a mammal?',     correct:'It lays eggs',                  incorrect:['It has scales','It has no fur','It breathes underwater'],                       category:27, difficulty:'hard',   grades:['6-8'] },
+  { id:'anim-h-5',  question:'Which animal has the longest lifespan?',              correct:'Greenland shark (up to 400 years)', incorrect:['Tortoise','Bowhead whale','Ocean quahog clam'],                           category:27, difficulty:'hard',   grades:['6-8'] },
+
+  // ===========================================================================
+  // 22  GEOGRAPHY
+  // ===========================================================================
+  { id:'geo-e-1',  question:'What is the largest continent?',                       correct:'Asia',                          incorrect:['Africa','North America','Europe'],                                              category:22, difficulty:'easy',   grades:['3-5'] },
+  { id:'geo-e-2',  question:'What is the capital of the United States?',            correct:'Washington D.C.',               incorrect:['New York','Los Angeles','Chicago'],                                             category:22, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'geo-e-3',  question:'Which country is the largest in the world by area?',   correct:'Russia',                        incorrect:['Canada','USA','China'],                                                         category:22, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'geo-e-4',  question:'Which country has the Eiffel Tower?',                  correct:'France',                        incorrect:['Italy','Spain','Germany'],                                                      category:22, difficulty:'easy',   grades:['3-5'] },
+  { id:'geo-e-5',  question:'What ocean is on the east coast of the USA?',          correct:'Atlantic Ocean',                incorrect:['Pacific Ocean','Indian Ocean','Arctic Ocean'],                                  category:22, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'geo-e-6',  question:'On which continent is Egypt?',                         correct:'Africa',                        incorrect:['Asia','Europe','South America'],                                                category:22, difficulty:'easy',   grades:['3-5','6-8'] },
+
+  { id:'geo-m-1',  question:'What is the capital of Australia?',                    correct:'Canberra',                      incorrect:['Sydney','Melbourne','Brisbane'],                                                category:22, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'geo-m-2',  question:'What is the capital of Canada?',                       correct:'Ottawa',                        incorrect:['Toronto','Vancouver','Montreal'],                                               category:22, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'geo-m-3',  question:'Which country has the most people?',                   correct:'India',                         incorrect:['China','USA','Indonesia'],                                                      category:22, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'geo-m-4',  question:'What is the smallest continent?',                      correct:'Australia / Oceania',           incorrect:['Europe','Antarctica','South America'],                                          category:22, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'geo-m-5',  question:'The Sahara Desert is on which continent?',             correct:'Africa',                        incorrect:['Asia','South America','Australia'],                                             category:22, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'geo-m-6',  question:'Through how many continents does the equator pass?',   correct:'3',                             incorrect:['2','4','5'],                                                                    category:22, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'geo-h-1',  question:'What is the capital of Kazakhstan?',                   correct:'Astana',                        incorrect:['Almaty','Karaganda','Shymkent'],                                                category:22, difficulty:'hard',   grades:['9-12'] },
+  { id:'geo-h-2',  question:'Which country has the most UNESCO World Heritage Sites?', correct:'Italy',                      incorrect:['China','Spain','France'],                                                       category:22, difficulty:'hard',   grades:['9-12'] },
+  { id:'geo-h-3',  question:'What is the deepest lake in the world?',               correct:'Lake Baikal',                   incorrect:['Caspian Sea','Lake Superior','Lake Tanganyika'],                               category:22, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'geo-h-4',  question:'Which two countries share the longest land border?',   correct:'USA and Canada',                incorrect:['Russia and China','USA and Mexico','Brazil and Bolivia'],                       category:22, difficulty:'hard',   grades:['9-12'] },
+  { id:'geo-h-5',  question:'What is the name of the tectonic plate under the Pacific Ocean?', correct:'Pacific Plate',     incorrect:['Indo-Australian Plate','North American Plate','Antarctic Plate'],                category:22, difficulty:'hard',   grades:['9-12'] },
+
+  // ===========================================================================
+  // 23  HISTORY
+  // ===========================================================================
+  { id:'hist-e-1',  question:'Who was the first President of the United States?',   correct:'George Washington',             incorrect:['Abraham Lincoln','Thomas Jefferson','John Adams'],                              category:23, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'hist-e-2',  question:'What were the Egyptian pyramids built for?',          correct:'As tombs for pharaohs',         incorrect:['As temples for gods','As palaces','As grain storage'],                         category:23, difficulty:'easy',   grades:['3-5'] },
+  { id:'hist-e-3',  question:'Who was the first man to walk on the Moon?',          correct:'Neil Armstrong',                incorrect:['Buzz Aldrin','Yuri Gagarin','John Glenn'],                                      category:23, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'hist-e-4',  question:'The Great Wall is in which country?',                 correct:'China',                         incorrect:['Japan','India','Mongolia'],                                                     category:23, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'hist-e-5',  question:'In which country was ancient Rome located?',          correct:'Italy',                         incorrect:['Greece','Spain','France'],                                                      category:23, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'hist-e-6',  question:'What do we call the time in history before writing was invented?', correct:'Prehistory',       incorrect:['Ancient history','The Stone Age only','The Dark Ages'],                        category:23, difficulty:'easy',   grades:['3-5'] },
+
+  { id:'hist-m-1',  question:'In which year did World War II end?',                 correct:'1945',                          incorrect:['1944','1943','1946'],                                                           category:23, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'hist-m-2',  question:'In which year did the Berlin Wall fall?',             correct:'1989',                          incorrect:['1991','1987','1993'],                                                           category:23, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'hist-m-3',  question:'Which empire was ruled by Genghis Khan?',             correct:'Mongol Empire',                 incorrect:['Ottoman Empire','Roman Empire','Han Dynasty'],                                  category:23, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'hist-m-4',  question:'Who gave the "I Have a Dream" speech?',               correct:'Martin Luther King Jr.',        incorrect:['Malcolm X','Barack Obama','Frederick Douglass'],                                category:23, difficulty:'medium', grades:['3-5','6-8','9-12'] },
+  { id:'hist-m-5',  question:'Which country did Columbus sail for in 1492?',        correct:'Spain',                         incorrect:['Portugal','England','France'],                                                  category:23, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'hist-m-6',  question:'Who was the Egyptian queen who famously allied with Julius Caesar?', correct:'Cleopatra',      incorrect:['Nefertiti','Hatshepsut','Berenice'],                                            category:23, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'hist-h-1',  question:'Which battle ended Napoleon\'s rule in 1815?',        correct:'Battle of Waterloo',            incorrect:['Battle of Austerlitz','Battle of Trafalgar','Battle of Leipzig'],               category:23, difficulty:'hard',   grades:['9-12'] },
+  { id:'hist-h-2',  question:'The Magna Carta was signed in which year?',           correct:'1215',                          incorrect:['1066','1348','1492'],                                                           category:23, difficulty:'hard',   grades:['9-12'] },
+  { id:'hist-h-3',  question:'Which assassination triggered World War I?',          correct:'Archduke Franz Ferdinand',      incorrect:['Tsar Nicholas II','Otto von Bismarck','Kaiser Wilhelm II'],                    category:23, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'hist-h-4',  question:'Who was the first female Prime Minister of the UK?',  correct:'Margaret Thatcher',             incorrect:['Theresa May','Queen Elizabeth II','Emmeline Pankhurst'],                       category:23, difficulty:'hard',   grades:['9-12'] },
+  { id:'hist-h-5',  question:'The Silk Road connected China to which region?',      correct:'Europe and the Middle East',    incorrect:['Africa','The Americas','Southeast Asia only'],                                  category:23, difficulty:'hard',   grades:['6-8','9-12'] },
+
+  // ===========================================================================
+  // 21  SPORTS
+  // ===========================================================================
+  { id:'sport-e-1',  question:'How many players are on a soccer team on the field?', correct:'11',                           incorrect:['9','10','12'],                                                                  category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'sport-e-2',  question:'Which sport uses a shuttlecock?',                    correct:'Badminton',                     incorrect:['Tennis','Squash','Volleyball'],                                                 category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'sport-e-3',  question:'In basketball, how many points is a free throw?',    correct:'1',                             incorrect:['2','3','0'],                                                                    category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'sport-e-4',  question:'How often does the Summer Olympics take place?',     correct:'Every 4 years',                 incorrect:['Every 2 years','Every year','Every 3 years'],                                  category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'sport-e-5',  question:'In baseball, how many strikes to get an out?',       correct:'3',                             incorrect:['2','4','5'],                                                                    category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'sport-e-6',  question:'What sport is played at Wimbledon?',                 correct:'Tennis',                        incorrect:['Cricket','Golf','Badminton'],                                                   category:21, difficulty:'easy',   grades:['3-5','6-8'] },
+
+  { id:'sport-m-1',  question:'Which country has won the most FIFA World Cup titles?', correct:'Brazil',                     incorrect:['Germany','Italy','Argentina'],                                                  category:21, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sport-m-2',  question:'How many points is a touchdown in American football?', correct:'6',                           incorrect:['7','3','4'],                                                                    category:21, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sport-m-3',  question:'In which year were the first modern Olympics held?', correct:'1896',                          incorrect:['1900','1892','1904'],                                                           category:21, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sport-m-4',  question:'What is the maximum score in a single bowling game?', correct:'300',                          incorrect:['200','250','360'],                                                              category:21, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'sport-m-5',  question:'How many holes are in a standard golf course?',       correct:'18',                           incorrect:['9','12','27'],                                                                  category:21, difficulty:'medium', grades:['6-8'] },
+  { id:'sport-m-6',  question:'Which sport uses the term "love" for a zero score?', correct:'Tennis',                        incorrect:['Badminton','Squash','Table tennis'],                                            category:21, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'sport-h-1',  question:'Who holds the record for the most Olympic gold medals?', correct:'Michael Phelps',            incorrect:['Usain Bolt','Carl Lewis','Larisa Latynina'],                                    category:21, difficulty:'hard',   grades:['9-12'] },
+  { id:'sport-h-2',  question:'How long is a marathon in miles?',                   correct:'26.2 miles',                    incorrect:['25 miles','26 miles','24.5 miles'],                                             category:21, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'sport-h-3',  question:'The "Miracle on Ice" at the 1980 Olympics was which sport?', correct:'Ice hockey',            incorrect:['Figure skating','Speed skating','Ski jumping'],                                category:21, difficulty:'hard',   grades:['9-12'] },
+  { id:'sport-h-4',  question:'Which country invented the sport of basketball?',    correct:'USA',                           incorrect:['Canada','UK','Germany'],                                                        category:21, difficulty:'hard',   grades:['9-12'] },
+  { id:'sport-h-5',  question:'What is the diameter of an NBA basketball hoop in inches?', correct:'18 inches',             incorrect:['16 inches','20 inches','22 inches'],                                            category:21, difficulty:'hard',   grades:['9-12'] },
+
+  // ===========================================================================
+  // 12  MUSIC
+  // ===========================================================================
+  { id:'mus-e-1',  question:'How many strings does a standard guitar have?',        correct:'6',                             incorrect:['4','5','7'],                                                                    category:12, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'mus-e-2',  question:'Which instrument has keys and hammers inside?',        correct:'Piano',                         incorrect:['Organ','Harpsichord','Accordion'],                                              category:12, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'mus-e-3',  question:'What do you call the speed of music?',                 correct:'Tempo',                         incorrect:['Pitch','Rhythm','Key'],                                                         category:12, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'mus-e-4',  question:'How many lines are on a musical staff?',               correct:'5',                             incorrect:['4','6','7'],                                                                    category:12, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'mus-e-5',  question:'What family of instruments does the violin belong to?', correct:'Strings',                      incorrect:['Woodwind','Brass','Percussion'],                                                category:12, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'mus-e-6',  question:'Which woodwind instrument uses a single reed?',        correct:'Clarinet',                      incorrect:['Oboe','Flute','Bassoon'],                                                       category:12, difficulty:'easy',   grades:['6-8'] },
+
+  { id:'mus-m-1',  question:'How many notes are in an octave?',                     correct:'8',                             incorrect:['7','10','12'],                                                                  category:12, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mus-m-2',  question:'Who composed Symphony No. 5 in C minor?',              correct:'Beethoven',                     incorrect:['Mozart','Bach','Schubert'],                                                     category:12, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mus-m-3',  question:'What is a musical piece for four players called?',     correct:'Quartet',                       incorrect:['Trio','Quintet','Duet'],                                                        category:12, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mus-m-4',  question:'Which genre of music originated in New Orleans?',      correct:'Jazz',                          incorrect:['Blues','Country','Rock and roll'],                                              category:12, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mus-m-5',  question:'What does "forte" mean in music?',                     correct:'Loud',                          incorrect:['Soft','Fast','Slow'],                                                           category:12, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mus-m-6',  question:'What time signature is known as "common time"?',       correct:'4/4',                           incorrect:['3/4','6/8','2/4'],                                                              category:12, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'mus-h-1',  question:'Which composer was deaf during much of his later work?', correct:'Beethoven',                   incorrect:['Bach','Brahms','Handel'],                                                       category:12, difficulty:'hard',   grades:['9-12'] },
+  { id:'mus-h-2',  question:'How many keys does a standard modern piano have?',     correct:'88',                            incorrect:['76','92','84'],                                                                 category:12, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'mus-h-3',  question:'What is the term for gradually slowing down in music?', correct:'Ritardando',                   incorrect:['Accelerando','Sforzando','Diminuendo'],                                         category:12, difficulty:'hard',   grades:['9-12'] },
+  { id:'mus-h-4',  question:'What word describes music with two or more independent melodic lines?', correct:'Polyphony',    incorrect:['Harmony','Monophony','Homophony'],                                              category:12, difficulty:'hard',   grades:['9-12'] },
+  { id:'mus-h-5',  question:'Which Italian term means to play softly?',             correct:'Piano',                         incorrect:['Forte','Mezzo','Staccato'],                                                     category:12, difficulty:'hard',   grades:['9-12'] },
+
+  // ===========================================================================
+  // 25  ART
+  // ===========================================================================
+  { id:'art-e-1',  question:'What are the three primary colors?',                   correct:'Red, blue, yellow',             incorrect:['Red, green, blue','Orange, purple, green','Pink, white, black'],                category:25, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'art-e-2',  question:'Who painted the Mona Lisa?',                           correct:'Leonardo da Vinci',             incorrect:['Michelangelo','Raphael','Caravaggio'],                                          category:25, difficulty:'easy',   grades:['3-5','6-8'] },
+  { id:'art-e-3',  question:'What color do you get when you mix red and blue?',     correct:'Purple',                        incorrect:['Orange','Green','Brown'],                                                       category:25, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'art-e-4',  question:'Which tool do artists use to apply paint to a canvas?', correct:'Paintbrush',                   incorrect:['Pencil','Ruler','Scissors'],                                                    category:25, difficulty:'easy',   grades:['K-2'] },
+  { id:'art-e-5',  question:'In which museum is the Mona Lisa displayed?',          correct:'The Louvre',                    incorrect:['The Uffizi','The Prado','The Met'],                                             category:25, difficulty:'easy',   grades:['6-8'] },
+  { id:'art-e-6',  question:'What do you call art that looks exactly like real life?', correct:'Realism',                    incorrect:['Abstract','Cubism','Surrealism'],                                               category:25, difficulty:'easy',   grades:['3-5'] },
+
+  { id:'art-m-1',  question:'Who sculpted "The Thinker"?',                          correct:'Auguste Rodin',                 incorrect:['Michelangelo','Donatello','Bernini'],                                           category:25, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'art-m-2',  question:'Who painted "The Starry Night"?',                      correct:'Vincent van Gogh',              incorrect:['Claude Monet','Paul Cezanne','Salvador Dali'],                                  category:25, difficulty:'medium', grades:['3-5','6-8'] },
+  { id:'art-m-3',  question:'Who painted the Sistine Chapel ceiling?',              correct:'Michelangelo',                  incorrect:['Leonardo da Vinci','Raphael','Botticelli'],                                     category:25, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'art-m-4',  question:'What art style features distorted shapes, made famous by Picasso?', correct:'Cubism',          incorrect:['Surrealism','Impressionism','Expressionism'],                                    category:25, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'art-m-5',  question:'What is a painting done directly on wet plaster called?', correct:'A fresco',                  incorrect:['A mosaic','A watercolor','An etching'],                                         category:25, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'art-h-1',  question:'What artistic movement did Claude Monet help found?',  correct:'Impressionism',                 incorrect:['Cubism','Surrealism','Realism'],                                                category:25, difficulty:'hard',   grades:['9-12'] },
+  { id:'art-h-2',  question:'What technique involves small dots of color that blend from a distance?', correct:'Pointillism', incorrect:['Impasto','Chiaroscuro','Sfumato'],                                            category:25, difficulty:'hard',   grades:['9-12'] },
+  { id:'art-h-3',  question:'The term "chiaroscuro" refers to what artistic technique?', correct:'Contrast of light and dark', incorrect:['Wet-on-wet painting','Gold-leaf gilding','Mosaic tiling'],                   category:25, difficulty:'hard',   grades:['9-12'] },
+  { id:'art-h-4',  question:'Who sculpted the marble statue of David?',             correct:'Michelangelo',                  incorrect:['Rodin','Bernini','Donatello'],                                                  category:25, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'art-h-5',  question:'What is the golden ratio approximately equal to?',     correct:'1.618',                         incorrect:['3.14','1.414','2.718'],                                                         category:25, difficulty:'hard',   grades:['9-12'] },
+
+  // ===========================================================================
+  // 18  TECHNOLOGY
+  // ===========================================================================
+  { id:'tech-e-1',  question:'What does CPU stand for?',                            correct:'Central Processing Unit',       incorrect:['Central Power Unit','Computer Processing Unit','Core Processing Unit'],         category:18, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'tech-e-2',  question:'What company makes the iPhone?',                      correct:'Apple',                         incorrect:['Samsung','Google','Microsoft'],                                                 category:18, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'tech-e-3',  question:'What does "www" stand for?',                          correct:'World Wide Web',                incorrect:['World Wide Wireless','Wide Web Window','World Web Works'],                      category:18, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'tech-e-4',  question:'What does "USB" stand for?',                          correct:'Universal Serial Bus',          incorrect:['Universal System Bridge','Unified Serial Bus','Ultra Speed Byte'],              category:18, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'tech-e-5',  question:'What do you call a program that harms your computer without your knowledge?', correct:'Malware / virus', incorrect:['Firewall','Browser extension','Software update'],                   category:18, difficulty:'easy',   grades:['6-8','9-12'] },
+
+  { id:'tech-m-1',  question:'What does HTML stand for?',                           correct:'HyperText Markup Language',     incorrect:['HyperText Machine Language','HyperText Making Language','HighText Markup Language'], category:18, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'tech-m-2',  question:'What programming language is used for web page styling?', correct:'CSS',                        incorrect:['JavaScript','Python','HTML'],                                                  category:18, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'tech-m-3',  question:'What does RAM stand for?',                            correct:'Random Access Memory',          incorrect:['Read Access Memory','Rapid Access Module','Remote Access Memory'],              category:18, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'tech-m-4',  question:'Who co-founded Apple with Steve Jobs?',               correct:'Steve Wozniak',                 incorrect:['Bill Gates','Elon Musk','Jeff Bezos'],                                         category:18, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'tech-m-5',  question:'What is the binary number for the decimal 8?',        correct:'1000',                          incorrect:['0110','1010','0100'],                                                           category:18, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'tech-m-6',  question:'What is an IP address?',                              correct:'A unique identifier for a device on a network', incorrect:['A type of processor','A memory unit','A keyboard port'],     category:18, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'tech-h-1',  question:'What is the time complexity of binary search?',       correct:'O(log n)',                      incorrect:['O(n)','O(n squared)','O(1)'],                                                  category:18, difficulty:'hard',   grades:['9-12'] },
+  { id:'tech-h-2',  question:'What does HTTPS stand for?',                          correct:'HyperText Transfer Protocol Secure', incorrect:['HyperText Transfer Protocol Standard','High Transfer Protocol System','HyperText Transport Protocol Simple'], category:18, difficulty:'hard', grades:['9-12'] },
+  { id:'tech-h-3',  question:'What is a recursive function?',                       correct:'A function that calls itself',  incorrect:['A function with no return value','A function used only once','A function with multiple parameters'], category:18, difficulty:'hard', grades:['9-12'] },
+  { id:'tech-h-4',  question:'Which data structure uses Last In First Out (LIFO)?', correct:'Stack',                         incorrect:['Queue','Linked list','Hash table'],                                             category:18, difficulty:'hard',   grades:['9-12'] },
+  { id:'tech-h-5',  question:'What does a boolean data type store?',                correct:'True or false values',          incorrect:['Whole numbers','Text strings','Decimal numbers'],                               category:18, difficulty:'hard',   grades:['6-8','9-12'] },
+
+  // ===========================================================================
+  // 20  MYTHOLOGY
+  // ===========================================================================
+  { id:'myth-e-1',  question:'Who is the king of the Greek gods?',                  correct:'Zeus',                          incorrect:['Poseidon','Hades','Apollo'],                                                    category:20, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'myth-e-2',  question:'Who is the Roman god of war?',                        correct:'Mars',                          incorrect:['Jupiter','Apollo','Mercury'],                                                   category:20, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'myth-e-3',  question:'What is the name of Thor\'s hammer?',                 correct:'Mjolnir',                       incorrect:['Gungnir','Excalibur','Durandal'],                                               category:20, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'myth-e-4',  question:'In Greek mythology, who opened a box releasing all evils?', correct:'Pandora',                 incorrect:['Medusa','Athena','Persephone'],                                                 category:20, difficulty:'easy',   grades:['6-8','9-12'] },
+  { id:'myth-e-5',  question:'Who is the Greek god of the sea?',                    correct:'Poseidon',                      incorrect:['Zeus','Hermes','Ares'],                                                         category:20, difficulty:'easy',   grades:['6-8','9-12'] },
+
+  { id:'myth-m-1',  question:'In Greek mythology, who flew too close to the sun on wax wings?', correct:'Icarus',            incorrect:['Daedalus','Hermes','Perseus'],                                                  category:20, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'myth-m-2',  question:'What is the Roman equivalent of the Greek god Zeus?', correct:'Jupiter',                       incorrect:['Mars','Saturn','Neptune'],                                                      category:20, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'myth-m-3',  question:'Who was the Greek hero that killed the Minotaur?',    correct:'Theseus',                       incorrect:['Hercules','Perseus','Achilles'],                                                category:20, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'myth-m-4',  question:'Who is the Norse god of mischief?',                   correct:'Loki',                          incorrect:['Odin','Freyr','Tyr'],                                                           category:20, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'myth-m-5',  question:'In Egyptian mythology, who is the god of the dead?',  correct:'Osiris',                        incorrect:['Ra','Anubis','Horus'],                                                          category:20, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'myth-m-6',  question:'What is the underworld river souls must cross in Greek myth?', correct:'The Styx',             incorrect:['The Acheron','The Lethe','The Nile'],                                           category:20, difficulty:'medium', grades:['6-8','9-12'] },
+
+  { id:'myth-h-1',  question:'In Norse mythology, what is the name of the world tree?', correct:'Yggdrasil',                 incorrect:['Mjolnir','Valhalla','Bifrost'],                                                 category:20, difficulty:'hard',   grades:['9-12'] },
+  { id:'myth-h-2',  question:'What are the three Fates in Greek mythology?',        correct:'Clotho, Lachesis, and Atropos', incorrect:['Alecto, Megaera, and Tisiphone','Medusa, Stheno, and Euryale','Nike, Bia, and Kratos'], category:20, difficulty:'hard', grades:['9-12'] },
+  { id:'myth-h-3',  question:'Which Norse realm is home to the frost giants?',      correct:'Jotunheim',                     incorrect:['Midgard','Niflheim','Muspelheim'],                                              category:20, difficulty:'hard',   grades:['9-12'] },
+  { id:'myth-h-4',  question:'In Hindu mythology, who is the god of destruction?',  correct:'Shiva',                         incorrect:['Vishnu','Brahma','Indra'],                                                      category:20, difficulty:'hard',   grades:['9-12'] },
+  { id:'myth-h-5',  question:'What is the name of the ship that Jason sailed on to find the Golden Fleece?', correct:'The Argo', incorrect:['The Odyssey','The Trireme','The Nautilus'],                              category:20, difficulty:'hard',   grades:['9-12'] },
+
+  // ===========================================================================
+  // 11  MOVIES & TV
+  // ===========================================================================
+  { id:'mv-e-1',  question:'What is the name of Simba\'s father in The Lion King?', correct:'Mufasa',                        incorrect:['Scar','Simba','Rafiki'],                                                        category:11, difficulty:'easy',   grades:['K-2','3-5','6-8'] },
+  { id:'mv-e-2',  question:'Which Disney character has a nose that grows when he lies?', correct:'Pinocchio',                incorrect:['Dumbo','Bambi','Geppetto'],                                                     category:11, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'mv-e-3',  question:'In Frozen, what power does Elsa have?',                 correct:'She can create ice and snow',   incorrect:['She can fly','She can breathe fire','She can turn invisible'],                  category:11, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'mv-e-4',  question:'What color is Shrek?',                                  correct:'Green',                         incorrect:['Blue','Brown','Yellow'],                                                        category:11, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'mv-e-5',  question:'In Toy Story, what type of toy is Woody?',              correct:'A cowboy',                      incorrect:['A spaceman','A robot','A dinosaur'],                                            category:11, difficulty:'easy',   grades:['K-2','3-5'] },
+  { id:'mv-e-6',  question:'What does Cinderella lose at midnight?',                correct:'Her glass slipper',             incorrect:['Her crown','Her dress','Her wand'],                                             category:11, difficulty:'easy',   grades:['K-2','3-5'] },
+
+  { id:'mv-m-1',  question:'In which country was the Lord of the Rings trilogy filmed?', correct:'New Zealand',             incorrect:['Canada','Ireland','Scotland'],                                                  category:11, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mv-m-2',  question:'What is the fictional African nation in Black Panther?', correct:'Wakanda',                      incorrect:['Zamunda','Genosha','Latveria'],                                                 category:11, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mv-m-3',  question:'What is the name of Han Solo\'s spaceship in Star Wars?', correct:'The Millennium Falcon',       incorrect:['The Death Star','The X-Wing','The Tie Fighter'],                                category:11, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mv-m-4',  question:'In Harry Potter, what school does Harry attend?',       correct:'Hogwarts',                      incorrect:['Beauxbatons','Durmstrang','Ilvermorny'],                                        category:11, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mv-m-5',  question:'Which animated show is set in the post-apocalyptic Land of Ooo?', correct:'Adventure Time',      incorrect:['Gravity Falls','Steven Universe','Regular Show'],                              category:11, difficulty:'medium', grades:['6-8','9-12'] },
+  { id:'mv-m-6',  question:'What is the name of the restaurant in Ratatouille?',   correct:'Gusteau\'s',                    incorrect:['Le Chien','Chez Colette','La Maison'],                                          category:11, difficulty:'medium', grades:['3-5','6-8'] },
+
+  { id:'mv-h-1',  question:'Which film won the first Academy Award for Best Picture in 1928?', correct:'Wings',              incorrect:['Sunrise','The Jazz Singer','Ben-Hur'],                                          category:11, difficulty:'hard',   grades:['9-12'] },
+  { id:'mv-h-2',  question:'Who directed "Schindler\'s List"?',                     correct:'Steven Spielberg',              incorrect:['Stanley Kubrick','Martin Scorsese','Francis Ford Coppola'],                    category:11, difficulty:'hard',   grades:['9-12'] },
+  { id:'mv-h-3',  question:'In which decade was the first Star Wars film released?', correct:'1970s',                        incorrect:['1960s','1980s','1990s'],                                                        category:11, difficulty:'hard',   grades:['6-8','9-12'] },
+  { id:'mv-h-4',  question:'What is the highest-grossing film franchise of all time?', correct:'Marvel Cinematic Universe',  incorrect:['Star Wars','James Bond','Harry Potter'],                                        category:11, difficulty:'hard',   grades:['9-12'] },
+  { id:'mv-h-5',  question:'The term "MacGuffin" in film was popularized by which director?', correct:'Alfred Hitchcock',   incorrect:['Orson Welles','Stanley Kubrick','John Ford'],                                   category:11, difficulty:'hard',   grades:['9-12'] },
 ]

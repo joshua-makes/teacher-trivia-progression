@@ -1,4 +1,4 @@
-import type { GradeLevel } from '@/lib/ladder'
+import type { GradeLevel } from '@/lib/data/grades'
 
 export type Category = {
   id: number
