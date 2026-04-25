@@ -1,5 +1,6 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { ThemeToggle } from './ThemeToggle'
+import { Emoji } from '@/components/ui/Emoji'
 
 export function Header() {
   return (
@@ -7,9 +8,10 @@ export function Header() {
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
         <Link
           href="/"
-          className="text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity"
+          className="inline-flex items-center gap-1.5 text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity"
         >
-          � Trivia Levels
+          <Emoji emoji="🏆" size={22} />
+          Trivia Levels
         </Link>
         <div className="flex items-center gap-3">
           <a
@@ -27,3 +29,4 @@ export function Header() {
     </header>
   )
 }
+

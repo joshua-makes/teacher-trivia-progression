@@ -125,7 +125,7 @@ export function QuestionCard({
         )}
       </div>
       <p
-        className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed"
+        className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-snug"
         aria-live="polite"
       >
         {data.question}

@@ -10,6 +10,7 @@ import { QUESTIONS } from '@/lib/data/questions'
 import { GRADE_LEVELS, type GradeLevel } from '@/lib/ladder'
 import { clearSession, createSession, saveSession, type Team } from '@/lib/session'
 import { cn } from '@/lib/utils'
+import { Emoji } from '@/components/ui/Emoji'
 
 const TEAM_COLORS = ['red', 'blue', 'green', 'purple'] as const
 
@@ -53,22 +54,22 @@ export default function HomePage() {
     <Container>
       <div className="max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="text-center mb-12 pt-6">
-          <div className="text-7xl mb-4 drop-shadow-sm">🏆</div>
-          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="rounded-3xl bg-gray-900 dark:bg-gray-950 border border-gray-800 text-center py-16 px-8 mb-10 overflow-hidden">
+          <Emoji emoji="🏆" size={96} className="mx-auto mb-5" />
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-3 tracking-tight">
             Trivia Levels
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-md mx-auto leading-relaxed">
-            Classroom trivia for K–12. Questions get harder as you climb — can your class reach the top?
+          <p className="text-gray-400 text-lg max-w-sm mx-auto leading-relaxed">
+            Classroom trivia for K–12. Questions get harder as you climb.
           </p>
         </div>
 
         <div className="space-y-5">
           {/* Step 1: Grade Level */}
           <Card className="p-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">1</span>
-              Grade Level
+            <h2 className="flex items-baseline gap-3 mb-4">
+              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">1</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Grade Level</span>
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {GRADE_LEVELS.map(gl => (
@@ -82,7 +83,7 @@ export default function HomePage() {
                       : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-700 dark:text-gray-300',
                   )}
                 >
-                  <div className="text-xl mb-0.5">{gl.emoji}</div>
+                  <Emoji emoji={gl.emoji} size={36} className="mx-auto mb-1" />
                   <div>{gl.label}</div>
                 </button>
               ))}
@@ -92,9 +93,9 @@ export default function HomePage() {
           {/* Step 2: Category */}
           <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">2</span>
-                Category
+              <h2 className="flex items-baseline gap-3">
+                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">2</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Category</span>
               </h2>
               <button
                 onClick={() => {
@@ -103,9 +104,9 @@ export default function HomePage() {
                 }}
                 title="Pick a random category"
                 aria-label="Random category"
-                className="text-2xl hover:scale-125 active:scale-95 transition-transform"
+                className="hover:scale-125 active:scale-95 transition-transform"
               >
-                🎲
+                <Emoji emoji="🎲" size={28} />
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -121,7 +122,7 @@ export default function HomePage() {
                   )}
                   aria-pressed={categoryId === cat.id}
                 >
-                  <div className="text-2xl mb-1">{cat.emoji}</div>
+                  <Emoji emoji={cat.emoji} size={32} className="mb-1" />
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{cat.name}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{cat.description}</div>
                 </button>
@@ -166,9 +167,9 @@ export default function HomePage() {
 
           {/* Step 3: Game Mode */}
           <Card className="p-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">3</span>
-              Game Mode
+            <h2 className="flex items-baseline gap-3 mb-4">
+              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">3</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Game Mode</span>
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -181,7 +182,7 @@ export default function HomePage() {
                 )}
                 aria-pressed={mode === 'solo'}
               >
-                <div className="text-3xl mb-1">🧑‍🎓</div>
+                <Emoji emoji="🧑‍🎓" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Classroom</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Whole class climbs together</div>
               </button>
@@ -195,7 +196,7 @@ export default function HomePage() {
                 )}
                 aria-pressed={mode === 'team'}
               >
-                <div className="text-3xl mb-1">🏅</div>
+                <Emoji emoji="🏅" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Teams</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buzz-in, take turns, compete</div>
               </button>
@@ -224,9 +225,9 @@ export default function HomePage() {
           {/* Step 4: Team Setup */}
           {mode === 'team' && (
             <Card className="p-5">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">4</span>
-                Team Setup
+              <h2 className="flex items-baseline gap-3 mb-4">
+                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">4</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Team Setup</span>
               </h2>
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Teams:</span>

@@ -4,13 +4,17 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --dot-color: #e5e7eb;
   }
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+    --dot-color: #1f2937;
   }
   body {
     @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-50 min-h-screen antialiased;
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
   ::selection {
     @apply bg-indigo-200 text-indigo-900 dark:bg-indigo-800 dark:text-indigo-100;

@@ -42,7 +42,7 @@ export function AnswerButton({
       {letter && (
         <span
           className={cn(
-            'flex-shrink-0 w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center',
+            'flex-shrink-0 w-8 h-8 rounded-lg text-sm font-bold flex items-center justify-center',
             state === 'default' &&
               'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
             state === 'correct' &&
