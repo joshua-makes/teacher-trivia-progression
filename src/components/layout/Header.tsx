@@ -9,11 +9,11 @@ export function Header() {
           href="/"
           className="text-xl font-bold text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity"
         >
-          🎓 Teacher Trivia
+          � Trivia Levels
         </Link>
         <div className="flex items-center gap-3">
           <a
-            href="https://github.com/bestacles/teacher-trivia-progression"
+            href="https://github.com/joshua-makes/teacher-trivia-progression"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"

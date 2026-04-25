@@ -5,8 +5,15 @@ import { Footer } from '@/components/layout/Footer'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 
 export const metadata: Metadata = {
-  title: 'Teacher Trivia Progression',
-  description: 'A trivia quiz app with category selection, difficulty progression, and results analytics',
+  metadataBase: new URL('https://trivialevels.com'),
+  title: 'Trivia Levels',
+  description: 'Classroom trivia game for K–12. Ladder-style questions that get harder as you climb — solo or team mode.',
+  openGraph: {
+    title: 'Trivia Levels',
+    description: 'Classroom trivia for K–12. Ladder-style, team-ready, and fun.',
+    url: 'https://trivialevels.com',
+    siteName: 'Trivia Levels',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,15 @@
 import type { Difficulty } from '@/lib/data/questions'
 import type { Answer } from '@/lib/scoring'
+import type { GradeLevel } from '@/lib/ladder'
+
+export type GameMode = 'solo' | 'team'
+
+export type Team = {
+  id: number
+  name: string
+  color: string
+  score: number
+}
 
 export type QuizSession = {
   categoryId: number
@@ -8,18 +18,35 @@ export type QuizSession = {
   currentQuestionIndex: number
   completed: boolean
   startedAt: number
+  mode: GameMode
+  gradeLevel: GradeLevel
+  currentRung: number
+  teams: Team[] | null
+  currentTeamIndex: number
+  finalPoints: number | null
 }
 
 const SESSION_KEY = 'trivia_session'
 
-export function createSession(categoryId: number, difficulty: Difficulty): QuizSession {
+export function createSession(
+  categoryId: number,
+  mode: GameMode,
+  gradeLevel: GradeLevel,
+  teams: Team[] | null = null,
+): QuizSession {
   return {
     categoryId,
-    difficulty,
+    difficulty: 'easy',
     answers: [],
     currentQuestionIndex: 0,
     completed: false,
     startedAt: Date.now(),
+    mode,
+    gradeLevel,
+    currentRung: 1,
+    teams,
+    currentTeamIndex: 0,
+    finalPoints: null,
   }
 }
 

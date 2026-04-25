@@ -24,18 +24,20 @@ export function QuestionCard({
   questionNumber,
   totalQuestions,
   onAnswer,
+  timerSeconds = 30,
 }: {
   data: QuestionData
   questionNumber: number
   totalQuestions: number
   onAnswer: (correct: boolean, timeMs: number) => void
+  timerSeconds?: number
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [isPaused, setIsPaused] = useState(false)
-  const [remaining, setRemaining] = useState(30)
+  const [remaining, setRemaining] = useState(timerSeconds)
   const [answered, setAnswered] = useState(false)
   const [startTime] = useState(Date.now())
-  const TIMER_SECONDS = 30
+  const TIMER_SECONDS = timerSeconds
 
   const handleAnswer = useCallback(
     (answer: string | null, timedOut = false) => {
@@ -63,14 +65,14 @@ export function QuestionCard({
     setAnswerStates({})
     setAnswered(false)
     setIsPaused(false)
-    setRemaining(TIMER_SECONDS)
-  }, [data.question])
+    setRemaining(timerSeconds)
+  }, [data.question, timerSeconds])
 
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          Question {questionNumber} of {totalQuestions}
+          Level {questionNumber} of {totalQuestions}
         </span>
         <DifficultyBadge difficulty={data.difficulty} />
       </div>
