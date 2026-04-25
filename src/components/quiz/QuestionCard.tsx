@@ -29,6 +29,7 @@ export function QuestionCard({
   showTimer = true,
   revealAnswer = false,
   suppressFeedback = false,
+  eliminatedAnswers = [] as string[],
 }: {
   data: QuestionData
   questionNumber: number
@@ -43,6 +44,8 @@ export function QuestionCard({
   revealAnswer?: boolean
   /** When true, calls onAnswer immediately with no visual feedback (for team mode) */
   suppressFeedback?: boolean
+  /** Answers to hide (used by 50/50 lifeline) */
+  eliminatedAnswers?: string[]
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [isPaused, setIsPaused] = useState(false)
@@ -129,6 +132,7 @@ export function QuestionCard({
       </p>
       <div className="space-y-3">
         {data.answers.map((answer, idx) => {
+          if (eliminatedAnswers.includes(answer)) return null
           let displayState: AnswerState = answerStates[answer] ?? 'default'
           if (revealAnswer && !answered) {
             displayState = answer === data.correctAnswer ? 'missed' : 'default'

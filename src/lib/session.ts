@@ -11,6 +11,14 @@ export type Team = {
   score: number
 }
 
+export type QuestionHistoryItem = {
+  questionNumber: number
+  questionText: string
+  correctAnswer: string
+  answeredBy: string | null
+  correct: boolean
+}
+
 export type QuizSession = {
   categoryId: number
   difficulty: Difficulty
@@ -24,6 +32,8 @@ export type QuizSession = {
   teams: Team[] | null
   currentTeamIndex: number
   finalPoints: number | null
+  questionCount: number
+  questionHistory: QuestionHistoryItem[]
 }
 
 const SESSION_KEY = 'trivia_session'
@@ -33,6 +43,7 @@ export function createSession(
   mode: GameMode,
   gradeLevel: GradeLevel,
   teams: Team[] | null = null,
+  questionCount = 15,
 ): QuizSession {
   return {
     categoryId,
@@ -47,6 +58,8 @@ export function createSession(
     teams,
     currentTeamIndex: 0,
     finalPoints: null,
+    questionCount,
+    questionHistory: [],
   }
 }
 

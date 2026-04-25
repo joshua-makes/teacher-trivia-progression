@@ -7,7 +7,7 @@ export function Header() {
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
         <Link
           href="/"
-          className="text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          className="text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:opacity-80 transition-opacity"
         >
           � Trivia Levels
         </Link>

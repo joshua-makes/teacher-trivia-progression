@@ -6,7 +6,7 @@ import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { loadSession, clearSession, type Team } from '@/lib/session'
+import { loadSession, clearSession, type Team, type QuestionHistoryItem } from '@/lib/session'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
@@ -34,6 +34,8 @@ export default function ResultsPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [questionHistory, setQuestionHistory] = useState<QuestionHistoryItem[]>([])
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const session = loadSession()
@@ -46,6 +48,7 @@ export default function ResultsPage() {
     setTeams(session.teams ?? [])
     const cat = CATEGORIES.find(c => c.id === session.categoryId)
     setCategoryName(cat?.name ?? 'General Knowledge')
+    setQuestionHistory(session.questionHistory ?? [])
     setLoading(false)
   }, [router])
 
@@ -69,6 +72,26 @@ export default function ResultsPage() {
     const sorted = [...teams].sort((a, b) => b.score - a.score)
     const winner = sorted[0]
     const maxScore = winner?.score ?? 1
+
+    function handleCopyTeam() {
+      const scoreLines = sorted
+        .map((t, i) => `${['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'][i] ?? `${i + 1}.`} ${t.name}: ${formatPoints(t.score)} pts`)
+        .join('\n')
+      const histLines = questionHistory
+        .map(item => `Q${item.questionNumber}: ${item.questionText}\n  \u2713 ${item.correctAnswer} \u2014 ${item.correct ? item.answeredBy : 'No one got it'}`)
+        .join('\n\n')
+      const text = [
+        `Trivia Levels \u2014 ${categoryName}`,
+        `Date: ${new Date().toLocaleDateString()}`,
+        '',
+        'FINAL SCORES',
+        scoreLines,
+        ...(questionHistory.length > 0 ? ['', 'QUESTION RECAP', histLines] : []),
+      ].join('\n')
+      void navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    }
 
     return (
       <Container>
@@ -118,6 +141,57 @@ export default function ResultsPage() {
             </div>
           </Card>
 
+          {/* Question Recap */}
+          {questionHistory.length > 0 && (
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Question Recap</h2>
+              <div className="space-y-3">
+                {questionHistory.map(item => (
+                  <div
+                    key={item.questionNumber}
+                    className="border-b border-gray-100 dark:border-gray-800 pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-0.5">Q{item.questionNumber}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">{item.questionText}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Answer: <span className="font-semibold text-gray-700 dark:text-gray-300">{item.correctAnswer}</span>
+                        </p>
+                      </div>
+                      <div className="shrink-0">
+                        {item.correct ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-xs font-bold">
+                            ✓ {item.answeredBy}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-xs font-bold">
+                            ✗ No one
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          <div className="flex gap-2 justify-center print:hidden">
+            <button
+              onClick={handleCopyTeam}
+              className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+            >
+              {copied ? '✓ Copied!' : '📋 Copy results'}
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              🖨️ Print
+            </button>
+          </div>
+
           <div className="flex justify-center pb-8">
             <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-10">
               🔄 Play Again
@@ -150,7 +224,7 @@ export default function ResultsPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {isWinner ? 'Top of the ladder!' : 'Points earned'}
           </p>
-          <p className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent tabular-nums">
+          <p className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
             {formatPoints(points)}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -194,6 +268,32 @@ export default function ResultsPage() {
             })}
           </div>
         </Card>
+
+        <div className="flex gap-2 justify-center print:hidden">
+          <button
+            onClick={() => {
+              const text = [
+                `Trivia Levels — ${categoryName}`,
+                `Date: ${new Date().toLocaleDateString()}`,
+                '',
+                isWinner ? '🏆 Grand Champion!' : `Reached level ${levelsReached} of 15`,
+                `Score: ${formatPoints(points)} pts`,
+              ].join('\n')
+              void navigator.clipboard.writeText(text)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2500)
+            }}
+            className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+          >
+            {copied ? '✓ Copied!' : '📋 Copy results'}
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            🖨️ Print
+          </button>
+        </div>
 
         <div className="flex justify-center pb-8">
           <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-10">

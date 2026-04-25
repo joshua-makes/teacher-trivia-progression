@@ -6,6 +6,7 @@ import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { CATEGORIES } from '@/lib/data/categories'
+import { QUESTIONS } from '@/lib/data/questions'
 import { GRADE_LEVELS, type GradeLevel } from '@/lib/ladder'
 import { clearSession, createSession, saveSession, type Team } from '@/lib/session'
 import { cn } from '@/lib/utils'
@@ -26,6 +27,8 @@ export default function HomePage() {
   const [mode, setMode] = useState<'solo' | 'team'>('solo')
   const [teamCount, setTeamCount] = useState(2)
   const [teamNames, setTeamNames] = useState(['Team 1', 'Team 2', 'Team 3', 'Team 4'])
+  const [questionCount, setQuestionCount] = useState(15)
+  const [showPreview, setShowPreview] = useState(false)
 
   const filteredCategories = CATEGORIES.filter(c => c.gradeLevels.includes(gradeLevel))
 
@@ -41,7 +44,7 @@ export default function HomePage() {
             score: 0,
           }))
         : null
-    const session = createSession(categoryId, mode, gradeLevel, teams)
+    const session = createSession(categoryId, mode, gradeLevel, teams, questionCount)
     saveSession(session)
     router.push('/quiz')
   }
@@ -52,10 +55,8 @@ export default function HomePage() {
         {/* Hero */}
         <div className="text-center mb-12 pt-6">
           <div className="text-7xl mb-4 drop-shadow-sm">🏆</div>
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-              Trivia Levels
-            </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-gray-100 mb-4">
+            Trivia Levels
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-lg max-w-md mx-auto leading-relaxed">
             Classroom trivia for K–12. Questions get harder as you climb — can your class reach the top?
@@ -126,6 +127,41 @@ export default function HomePage() {
                 </button>
               ))}
             </div>
+
+            {/* Question preview */}
+            {categoryId && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  onClick={() => setShowPreview(p => !p)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  {showPreview ? '\u25be' : '\u25b8'} Preview questions ({QUESTIONS.filter(q => q.category === categoryId && q.grades.includes(gradeLevel)).length} for this grade)
+                </button>
+                {showPreview && (
+                  <div className="mt-3 space-y-4 max-h-72 overflow-y-auto pr-1">
+                    {(['easy', 'medium', 'hard'] as const).map(diff => {
+                      const qs = QUESTIONS.filter(q => q.category === categoryId && q.difficulty === diff && q.grades.includes(gradeLevel))
+                      if (qs.length === 0) return null
+                      return (
+                        <div key={diff}>
+                          <p className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5">
+                            {diff === 'easy' ? '\u2756 Easy' : diff === 'medium' ? '\u25c6 Medium' : '\u2605 Hard'} \u00b7 {qs.length} questions
+                          </p>
+                          <div className="space-y-1.5">
+                            {qs.map((q, i) => (
+                              <div key={q.id} className="rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 px-3 py-2">
+                                <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{i + 1}. {q.question}</p>
+                                <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">\u2713 {q.correct}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Step 3: Game Mode */}
@@ -163,6 +199,25 @@ export default function HomePage() {
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Teams</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buzz-in, take turns, compete</div>
               </button>
+            </div>
+            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <span className="text-sm text-gray-600 dark:text-gray-400 shrink-0">Questions per game:</span>
+              <div className="flex gap-2">
+                {[5, 10, 15].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setQuestionCount(n)}
+                    className={cn(
+                      'w-10 h-9 rounded-lg border-2 font-bold text-sm transition-all',
+                      questionCount === n
+                        ? 'border-indigo-500 bg-indigo-500 text-white'
+                        : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400',
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
           </Card>
 

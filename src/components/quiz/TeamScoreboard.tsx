@@ -31,26 +31,16 @@ export function TeamScoreboard({
           <div
             key={team.id}
             className={cn(
-              'rounded-lg border-2 px-3 py-2 transition-all',
+              'rounded-xl border-2 px-3 py-3 transition-all',
               style.border,
-              isCurrent ? style.activeBg : 'bg-transparent opacity-50',
+              isCurrent ? style.activeBg : 'bg-white dark:bg-gray-900',
             )}
           >
-            <div
-              className={cn(
-                'text-xs font-semibold truncate',
-                isCurrent ? style.text : 'text-gray-500 dark:text-gray-400',
-              )}
-            >
+            <div className={cn('text-xs font-semibold truncate', style.text)}>
               {isCurrent && '▶ '}
               {team.name}
             </div>
-            <div
-              className={cn(
-                'text-xl font-bold tabular-nums',
-                isCurrent ? style.text : 'text-gray-400 dark:text-gray-500',
-              )}
-            >
+            <div className={cn('text-xl font-bold tabular-nums', style.text)}>
               {formatPoints(team.score)}
             </div>
           </div>

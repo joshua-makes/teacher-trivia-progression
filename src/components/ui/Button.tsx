@@ -20,7 +20,7 @@ export function Button({
         size === 'md' && 'px-5 py-2.5 text-base',
         size === 'lg' && 'px-8 py-3.5 text-lg',
         variant === 'primary' &&
-          'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-md hover:shadow-lg focus:ring-indigo-500',
+          'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm focus:ring-indigo-500',
         variant === 'secondary' &&
           'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
         variant === 'ghost' &&

@@ -16,3 +16,17 @@
     @apply bg-indigo-200 text-indigo-900 dark:bg-indigo-800 dark:text-indigo-100;
   }
 }
+
+@keyframes buzzFlash {
+  0%, 55% { opacity: 1; }
+  100%     { opacity: 0; }
+}
+
+@media print {
+  /* Hide chrome — nav, footer, interactive buttons */
+  header, footer, nav { display: none !important; }
+  /* Let page background be white in print */
+  body { background: white !important; color: black !important; }
+  /* Remove rounded corners in print for cleaner output */
+  * { box-shadow: none !important; }
+}
