@@ -6,6 +6,7 @@ import { Container } from '@/components/layout/Container'
 import { QuestionCard } from '@/components/quiz/QuestionCard'
 import { LadderDisplay } from '@/components/quiz/LadderDisplay'
 import { TeamScoreboard } from '@/components/quiz/TeamScoreboard'
+import { Timer } from '@/components/quiz/Timer'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { loadSession, saveSession, type Team } from '@/lib/session'
@@ -58,6 +59,8 @@ export default function QuizPage() {
   // Team buzz-in mode state
   const [buzzedTeamIndex, setBuzzedTeamIndex] = useState<number | null>(null)
   const [triedTeamIndices, setTriedTeamIndices] = useState<number[]>([])
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [buzzTimerRemaining, setBuzzTimerRemaining] = useState(0)
   const teamLastResultRef = useRef<{ correct: true; teamName: string; pts: number } | { correct: false; correctAnswer: string } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -161,16 +164,17 @@ export default function QuizPage() {
               setCurrentRung(r => r + 1)
               setBuzzedTeamIndex(null)
               setTriedTeamIndices([])
+              setIsRevealed(false)
               setGameState('playing')
             }
           }, 1800)
         } else {
           const newTried = [...triedTeamIndices, buzzedTeamIndex]
-          setBuzzedTeamIndex(null)
           setTriedTeamIndices(newTried)
 
           if (newTried.length >= teams.length) {
-            // All teams failed — reveal answer and move on
+            // All teams failed — show answer and move on
+            setBuzzedTeamIndex(null)
             teamLastResultRef.current = { correct: false, correctAnswer: q?.correctAnswer ?? '' }
             setGameState('answered')
             timerRef.current = setTimeout(() => {
@@ -179,11 +183,22 @@ export default function QuizPage() {
               } else {
                 setCurrentRung(r => r + 1)
                 setTriedTeamIndices([])
+                setIsRevealed(false)
                 setGameState('playing')
               }
             }, 2800)
+          } else {
+            // Steal opportunity
+            const remaining = teams.map((_, i) => i).filter(i => !newTried.includes(i))
+            if (remaining.length === 1) {
+              // Only one team left — auto-buzz them in so the game keeps moving
+              const autoIdx = remaining[0]!
+              setBuzzedTeamIndex(autoIdx)
+              setBuzzTimerRemaining(session ? getTimerSeconds(session.gradeLevel) : 30)
+            } else {
+              setBuzzedTeamIndex(null)
+            }
           }
-          // else: stay in 'playing' — steal opportunity, buzz-in panel re-renders
         }
       }
     },
@@ -275,6 +290,7 @@ export default function QuizPage() {
   // ── TEAM MODE LAYOUT ──────────────────────────────────
   if (session?.mode === 'team') {
     const buzzedTeam = buzzedTeamIndex !== null ? teams[buzzedTeamIndex] : null
+    const buzzing = buzzedTeamIndex !== null && !isRevealed
 
     return (
       <Container>
@@ -286,32 +302,80 @@ export default function QuizPage() {
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Question {currentRung} of 15 · {categoryName}
               </span>
-              <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-                ✕ End Game
-              </Button>
+              <div className="flex items-center gap-2">
+                {!isRevealed && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setBuzzedTeamIndex(null); setIsRevealed(true) }}
+                    title="Show the correct answer to everyone"
+                  >
+                    👁 Reveal Answer
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                  ✕ End Game
+                </Button>
+              </div>
             </div>
 
-            {/* Active team banner */}
-            {buzzedTeam && (
+            {/* Active team banner — with countdown timer */}
+            {buzzedTeam && !isRevealed && (
               <div className={`flex items-center justify-between px-4 py-2 rounded-xl mb-3 text-white font-bold text-sm ${TEAM_BG[buzzedTeam.color] ?? 'bg-blue-500'}`}>
                 <span>🎯 {buzzedTeam.name} is answering…</span>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xl font-mono font-black tabular-nums ${buzzTimerRemaining <= 5 ? 'text-red-200 animate-pulse' : ''}`}>
+                    {buzzTimerRemaining}s
+                  </span>
+                  <button
+                    onClick={() => setBuzzedTeamIndex(null)}
+                    className="opacity-70 hover:opacity-100 text-xs underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {/* Timer fires on expire — treat as wrong answer */}
+                <Timer
+                  key={`buzz-timer-${currentRung}-${buzzedTeamIndex}-${triedTeamIndices.length}`}
+                  seconds={timerSeconds}
+                  isPaused={false}
+                  onTick={setBuzzTimerRemaining}
+                  onExpire={() => handleAnswer(false)}
+                />
+              </div>
+            )}
+
+            {/* Reveal banner */}
+            {isRevealed && (
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-xl px-4 py-2 mb-3 text-sm text-green-800 dark:text-green-300 font-medium flex items-center justify-between">
+                <span>✅ Answer revealed — the correct answer is highlighted below</span>
                 <button
-                  onClick={() => setBuzzedTeamIndex(null)}
-                  className="opacity-70 hover:opacity-100 text-xs underline ml-4"
+                  onClick={() => {
+                    // Skip question, advance
+                    teamLastResultRef.current = { correct: false, correctAnswer: currentQuestion?.correctAnswer ?? '' }
+                    if (currentRung >= 15) {
+                      finishGame(0, teams, true)
+                    } else {
+                      setCurrentRung(r => r + 1)
+                      setTriedTeamIndices([])
+                      setIsRevealed(false)
+                    }
+                  }}
+                  className="ml-4 text-xs underline opacity-70 hover:opacity-100"
                 >
-                  Cancel
+                  Next →
                 </button>
               </div>
             )}
 
             {/* Steal notification */}
-            {stealAvailable && !buzzedTeam && (
+            {stealAvailable && !buzzedTeam && !isRevealed && (
               <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-600 rounded-xl px-4 py-2 mb-3 text-sm text-amber-800 dark:text-amber-300 font-medium">
-                ❌ Wrong answer! Another team can steal.
+                ❌ Wrong answer! Select a team to steal.
               </div>
             )}
 
-            {/* Question card — locked until a team buzzes in */}
+            {/* Question card */}
             {currentQuestion && (
               <QuestionCard
                 key={`q-${currentRung}-${triedTeamIndices.length}`}
@@ -325,13 +389,15 @@ export default function QuizPage() {
                 questionNumber={currentRung}
                 totalQuestions={15}
                 onAnswer={handleAnswer}
-                locked={buzzedTeamIndex === null}
+                locked={!buzzing}
                 showTimer={false}
+                revealAnswer={isRevealed}
+                suppressFeedback={true}
               />
             )}
 
             {/* Buzz-in panel */}
-            {gameState === 'playing' && (
+            {gameState === 'playing' && !isRevealed && (
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-3">
                   {stealAvailable ? '🔁 Steal — who buzzes in?' : '📣 Who buzzed in?'}
@@ -343,7 +409,12 @@ export default function QuizPage() {
                     return (
                       <button
                         key={team.id}
-                        onClick={() => { if (!tried && buzzedTeamIndex === null) setBuzzedTeamIndex(i) }}
+                        onClick={() => {
+                          if (!tried && buzzedTeamIndex === null) {
+                            setBuzzTimerRemaining(timerSeconds)
+                            setBuzzedTeamIndex(i)
+                          }
+                        }}
                         disabled={tried || buzzedTeamIndex !== null}
                         className={`relative py-4 px-3 rounded-2xl font-bold text-lg transition-all shadow-sm select-none
                           ${isBuzzed

@@ -27,6 +27,8 @@ export function QuestionCard({
   timerSeconds = 30,
   locked = false,
   showTimer = true,
+  revealAnswer = false,
+  suppressFeedback = false,
 }: {
   data: QuestionData
   questionNumber: number
@@ -37,6 +39,10 @@ export function QuestionCard({
   locked?: boolean
   /** When false, the timer is hidden and never fires */
   showTimer?: boolean
+  /** When true, highlights the correct answer without triggering onAnswer */
+  revealAnswer?: boolean
+  /** When true, calls onAnswer immediately with no visual feedback (for team mode) */
+  suppressFeedback?: boolean
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [isPaused, setIsPaused] = useState(false)
@@ -51,6 +57,12 @@ export function QuestionCard({
       setAnswered(true)
       const correct = !timedOut && answer === data.correctAnswer
       const timeMs = Date.now() - startTime
+      // In team mode, skip visual feedback and fire immediately so the
+      // correct answer is never exposed to stealing teams
+      if (suppressFeedback) {
+        onAnswer(correct, timeMs)
+        return
+      }
       const newStates: Record<string, AnswerState> = {}
       for (const a of data.answers) {
         if (a === data.correctAnswer) {
@@ -64,7 +76,7 @@ export function QuestionCard({
       setAnswerStates(newStates)
       setTimeout(() => onAnswer(correct, timeMs), 1200)
     },
-    [answered, data.correctAnswer, data.answers, onAnswer, startTime]
+    [answered, data.correctAnswer, data.answers, onAnswer, startTime, suppressFeedback]
   )
 
   useEffect(() => {
@@ -116,15 +128,21 @@ export function QuestionCard({
         {data.question}
       </p>
       <div className="space-y-3">
-        {data.answers.map(answer => (
-          <AnswerButton
-            key={answer}
-            answer={answer}
-            state={answerStates[answer] ?? 'default'}
-            disabled={answered || isPaused || locked}
-            onClick={() => handleAnswer(answer)}
-          />
-        ))}
+        {data.answers.map(answer => {
+          let displayState: AnswerState = answerStates[answer] ?? 'default'
+          if (revealAnswer && !answered) {
+            displayState = answer === data.correctAnswer ? 'missed' : 'default'
+          }
+          return (
+            <AnswerButton
+              key={answer}
+              answer={answer}
+              state={displayState}
+              disabled={answered || isPaused || locked || revealAnswer}
+              onClick={() => handleAnswer(answer)}
+            />
+          )
+        })}
       </div>
       {isPaused && !answered && !locked && (
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">

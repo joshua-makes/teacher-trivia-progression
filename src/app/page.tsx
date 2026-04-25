@@ -87,9 +87,22 @@ export default function HomePage() {
 
           {/* Step 2: Category */}
           <Card className="p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
-              2 · Category
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                2 · Category
+              </h2>
+              <button
+                onClick={() => {
+                  const pick = filteredCategories[Math.floor(Math.random() * filteredCategories.length)]
+                  if (pick) setCategoryId(pick.id)
+                }}
+                title="Pick a random category"
+                aria-label="Random category"
+                className="text-2xl hover:scale-125 active:scale-95 transition-transform"
+              >
+                🎲
+              </button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {filteredCategories.map(cat => (
                 <button
