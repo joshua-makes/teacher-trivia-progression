@@ -28,7 +28,6 @@ type GameState =
   | 'loading'
   | 'playing'
   | 'answered'
-  | 'team-next'
   | 'complete'
   | 'error'
 
@@ -40,6 +39,15 @@ const TEAM_BORDER: Record<string, string> = {
   red: 'border-red-400', blue: 'border-blue-400', green: 'border-green-400', purple: 'border-purple-400',
 }
 
+const TEAM_TEXT: Record<string, string> = {
+  red: 'text-red-600 dark:text-red-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+  green: 'text-green-600 dark:text-green-400',
+  purple: 'text-purple-600 dark:text-purple-400',
+}
+
+const TEAM_QUESTION_POINTS: Record<string, number> = { easy: 100, medium: 200, hard: 300 }
+
 export default function QuizPage() {
   const router = useRouter()
   const [gameState, setGameState] = useState<GameState>('loading')
@@ -47,16 +55,19 @@ export default function QuizPage() {
   const [allQuestions, setAllQuestions] = useState<QuizQuestion[]>([])
   const [currentRung, setCurrentRung] = useState(1)
   const [teams, setTeams] = useState<Team[]>([])
-  const [currentTeamIndex, setCurrentTeamIndex] = useState(0)
+  // Team buzz-in mode state
+  const [buzzedTeamIndex, setBuzzedTeamIndex] = useState<number | null>(null)
+  const [triedTeamIndices, setTriedTeamIndices] = useState<number[]>([])
+  const teamLastResultRef = useRef<{ correct: true; teamName: string; pts: number } | { correct: false; correctAnswer: string } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
 
-  const loadAllQuestions = useCallback((catId: number, gradeLevel: string): QuizQuestion[] => {
+  const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team'): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
-    const out: QuizQuestion[] = []
+    const pools: QuizQuestion[] = []
     for (const diff of diffs) {
       const byGrade = QUESTIONS.filter(q =>
         q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never)
@@ -64,7 +75,7 @@ export default function QuizPage() {
       const pool = byGrade.length >= 5
         ? byGrade
         : QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never))
-      out.push(...shuffleArray(pool).slice(0, 5).map(q => ({
+      pools.push(...shuffleArray(pool).slice(0, 5).map(q => ({
         id: q.id,
         question: q.question,
         answers: shuffleArray([q.correct, ...q.incorrect]),
@@ -72,7 +83,9 @@ export default function QuizPage() {
         difficulty: diff,
       })))
     }
-    return out
+    // Solo: ordered easy→medium→hard (ladder structure)
+    // Team: shuffled mix so difficulty escalates unpredictably
+    return mode === 'team' ? shuffleArray(pools) : pools
   }, [])
 
   useEffect(() => {
@@ -81,8 +94,8 @@ export default function QuizPage() {
     setSession(sess)
     setCurrentRung(1)
     setTeams(sess.teams ? [...sess.teams] : [])
-    setCurrentTeamIndex(0)
-    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel)
+    setBuzzedTeamIndex(null)
+    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel, sess.mode)
     setAllQuestions(qs)
     setGameState('playing')
     return () => clearTimer()
@@ -109,12 +122,11 @@ export default function QuizPage() {
   const handleAnswer = useCallback(
     (correct: boolean) => {
       if (gameState !== 'playing') return
-      setGameState('answered')
       clearTimer()
-
       if (!session) return
 
       if (session.mode === 'solo') {
+        setGameState('answered')
         if (correct) {
           timerRef.current = setTimeout(() => {
             if (currentRung >= 15) {
@@ -130,36 +142,52 @@ export default function QuizPage() {
           }, 2500)
         }
       } else {
-        // Team mode — update score, advance rung, rotate team
-        const newTeams = teams.map((t, i) =>
-          i === currentTeamIndex && correct
-            ? { ...t, score: t.score + (currentRungData?.points ?? 0) }
-            : t,
-        )
-        setTeams(newTeams)
+        // ── Team buzz-in mode ──────────────────────────────────────────
+        if (buzzedTeamIndex === null) return
+        const q = allQuestions[currentRung - 1]
 
-        timerRef.current = setTimeout(() => {
-          if (currentRung >= 15) {
-            finishGame(0, newTeams, true)
-            return
-          }
-          const nextRung = currentRung + 1
-          const nextTeam = (currentTeamIndex + 1) % (newTeams.length || 1)
-          setCurrentRung(nextRung)
-          setCurrentTeamIndex(nextTeam)
-          const sess = loadSession()
-          if (sess) { sess.currentRung = nextRung; sess.currentTeamIndex = nextTeam; sess.teams = newTeams; saveSession(sess) }
+        if (correct) {
+          const pts = TEAM_QUESTION_POINTS[q?.difficulty ?? 'easy']
+          const newTeams = teams.map((t, i) =>
+            i === buzzedTeamIndex ? { ...t, score: t.score + pts } : t
+          )
+          setTeams(newTeams)
+          teamLastResultRef.current = { correct: true, teamName: teams[buzzedTeamIndex]?.name ?? '', pts }
+          setGameState('answered')
+          timerRef.current = setTimeout(() => {
+            if (currentRung >= 15) {
+              finishGame(0, newTeams, true)
+            } else {
+              setCurrentRung(r => r + 1)
+              setBuzzedTeamIndex(null)
+              setTriedTeamIndices([])
+              setGameState('playing')
+            }
+          }, 1800)
+        } else {
+          const newTried = [...triedTeamIndices, buzzedTeamIndex]
+          setBuzzedTeamIndex(null)
+          setTriedTeamIndices(newTried)
 
-          if (newTeams.length > 1) {
-            setGameState('team-next')
-            timerRef.current = setTimeout(() => setGameState('playing'), 2200)
-          } else {
-            setGameState('playing')
+          if (newTried.length >= teams.length) {
+            // All teams failed — reveal answer and move on
+            teamLastResultRef.current = { correct: false, correctAnswer: q?.correctAnswer ?? '' }
+            setGameState('answered')
+            timerRef.current = setTimeout(() => {
+              if (currentRung >= 15) {
+                finishGame(0, teams, true)
+              } else {
+                setCurrentRung(r => r + 1)
+                setTriedTeamIndices([])
+                setGameState('playing')
+              }
+            }, 2800)
           }
-        }, 1600)
+          // else: stay in 'playing' — steal opportunity, buzz-in panel re-renders
+        }
       }
     },
-    [gameState, session, currentRung, currentRungData, currentTeamIndex, teams, finishGame],
+    [gameState, session, currentRung, allQuestions, buzzedTeamIndex, triedTeamIndices, teams, finishGame],
   )
 
   const handleWalkAway = useCallback(() => {
@@ -187,7 +215,7 @@ export default function QuizPage() {
     return (
       <Container>
         <Card className="p-6 text-center max-w-md mx-auto mt-8">
-          <p className="text-red-500 mb-4">Failed to load questions. Please check your connection.</p>
+          <p className="text-red-500 mb-4">Failed to load questions. Please try again.</p>
           <Button onClick={() => router.push('/')}>Back to Home</Button>
         </Card>
       </Container>
@@ -211,28 +239,156 @@ export default function QuizPage() {
     )
   }
 
-  // ── Team transition screen ────────────────────────────
-  if (gameState === 'team-next' && teams.length > 0) {
-    const nextTeam = teams[currentTeamIndex]
+  // ── Team: answered result flash ───────────────────────
+  if (gameState === 'answered' && session?.mode === 'team') {
+    const result = teamLastResultRef.current
     return (
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div
-            className={`text-center rounded-2xl px-12 py-10 text-white shadow-xl ${TEAM_BG[nextTeam?.color ?? 'blue'] ?? 'bg-blue-500'}`}
-          >
-            <div className="text-5xl mb-3">🎯</div>
-            <p className="text-lg opacity-80 font-medium mb-1">Level {currentRung}</p>
-            <h2 className="text-4xl font-bold">{nextTeam?.name}</h2>
-            <p className="text-xl opacity-80 mt-2">You&apos;re up!</p>
+          <div className="text-center max-w-sm mx-auto">
+            {result?.correct ? (
+              <>
+                <div className="text-6xl mb-4">✅</div>
+                <h2 className="text-3xl font-bold text-green-600 dark:text-green-400">Correct!</h2>
+                <p className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mt-2">{result.teamName}</p>
+                <p className="text-xl text-gray-500 dark:text-gray-400 mt-1">+{result.pts.toLocaleString()} pts</p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">😬</div>
+                <h2 className="text-3xl font-bold text-red-600 dark:text-red-400">No one got it!</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">The answer was:</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{result?.correctAnswer}</p>
+              </>
+            )}
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-5">Next question coming up…</p>
           </div>
         </div>
       </Container>
     )
   }
 
-  // ── Main game ─────────────────────────────────────────
+  // ── Shared derived values ─────────────────────────────
   const safeZonePts = getSafeZonePoints(currentRung)
+  const stealAvailable = triedTeamIndices.length > 0 && buzzedTeamIndex === null
 
+  // ── TEAM MODE LAYOUT ──────────────────────────────────
+  if (session?.mode === 'team') {
+    const buzzedTeam = buzzedTeamIndex !== null ? teams[buzzedTeamIndex] : null
+
+    return (
+      <Container>
+        <div className="flex gap-4 items-start">
+          {/* Question area */}
+          <div className="flex-1 min-w-0">
+            {/* Top bar */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Question {currentRung} of 15 · {categoryName}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                ✕ End Game
+              </Button>
+            </div>
+
+            {/* Active team banner */}
+            {buzzedTeam && (
+              <div className={`flex items-center justify-between px-4 py-2 rounded-xl mb-3 text-white font-bold text-sm ${TEAM_BG[buzzedTeam.color] ?? 'bg-blue-500'}`}>
+                <span>🎯 {buzzedTeam.name} is answering…</span>
+                <button
+                  onClick={() => setBuzzedTeamIndex(null)}
+                  className="opacity-70 hover:opacity-100 text-xs underline ml-4"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {/* Steal notification */}
+            {stealAvailable && !buzzedTeam && (
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-600 rounded-xl px-4 py-2 mb-3 text-sm text-amber-800 dark:text-amber-300 font-medium">
+                ❌ Wrong answer! Another team can steal.
+              </div>
+            )}
+
+            {/* Question card — locked until a team buzzes in */}
+            {currentQuestion && (
+              <QuestionCard
+                key={`q-${currentRung}-${triedTeamIndices.length}`}
+                data={{
+                  question: currentQuestion.question,
+                  answers: currentQuestion.answers,
+                  correctAnswer: currentQuestion.correctAnswer,
+                  difficulty: currentQuestion.difficulty,
+                  categoryName,
+                }}
+                questionNumber={currentRung}
+                totalQuestions={15}
+                onAnswer={handleAnswer}
+                locked={buzzedTeamIndex === null}
+                showTimer={false}
+              />
+            )}
+
+            {/* Buzz-in panel */}
+            {gameState === 'playing' && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-3">
+                  {stealAvailable ? '🔁 Steal — who buzzes in?' : '📣 Who buzzed in?'}
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {teams.map((team, i) => {
+                    const tried = triedTeamIndices.includes(i)
+                    const isBuzzed = buzzedTeamIndex === i
+                    return (
+                      <button
+                        key={team.id}
+                        onClick={() => { if (!tried && buzzedTeamIndex === null) setBuzzedTeamIndex(i) }}
+                        disabled={tried || buzzedTeamIndex !== null}
+                        className={`relative py-4 px-3 rounded-2xl font-bold text-lg transition-all shadow-sm select-none
+                          ${isBuzzed
+                            ? `${TEAM_BG[team.color] ?? 'bg-blue-500'} text-white scale-105 shadow-lg`
+                            : tried
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 line-through opacity-50 cursor-not-allowed'
+                              : buzzedTeamIndex !== null
+                                ? 'opacity-40 cursor-not-allowed bg-white dark:bg-gray-700'
+                                : `bg-white dark:bg-gray-700 border-2 ${TEAM_BORDER[team.color] ?? 'border-gray-300'} ${TEAM_TEXT[team.color] ?? 'text-gray-800'} hover:scale-105 hover:shadow-md cursor-pointer`
+                          }`}
+                      >
+                        {tried && <span className="absolute top-1 right-2 text-xs font-normal">✗</span>}
+                        {team.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop scoreboard sidebar */}
+          <div className="hidden lg:block w-48 shrink-0">
+            <div className="sticky top-4">
+              <TeamScoreboard teams={teams} currentTeamIndex={-1} />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile scoreboard strip */}
+        <div className="lg:hidden mt-4 flex gap-2 overflow-x-auto pb-1">
+          {[...teams].sort((a, b) => b.score - a.score).map(t => (
+            <div
+              key={t.id}
+              className={`flex-shrink-0 px-3 py-2 rounded-lg border-2 text-sm font-medium ${TEAM_BORDER[t.color] ?? 'border-gray-300'}`}
+            >
+              {t.name}: <span className="font-bold tabular-nums">{t.score.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </Container>
+    )
+  }
+
+  // ── SOLO MODE LAYOUT ──────────────────────────────────
   return (
     <Container>
       <div className="flex gap-4 items-start">
@@ -248,28 +404,10 @@ export default function QuizPage() {
 
         {/* Center */}
         <div className="flex-1 min-w-0">
-          {/* Mobile team strip */}
-          {session?.mode === 'team' && teams.length > 0 && (
-            <div className="lg:hidden mb-3 flex gap-2 overflow-x-auto pb-1">
-              {teams.map((t, i) => (
-                <div
-                  key={t.id}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-all ${TEAM_BORDER[t.color] ?? 'border-gray-300'} ${i === currentTeamIndex ? 'bg-white dark:bg-gray-800 font-bold shadow-sm' : 'opacity-50'}`}
-                >
-                  {i === currentTeamIndex && '▶ '}
-                  {t.name}: <span className="tabular-nums">{formatPoints(t.score)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Top bar */}
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {session?.mode === 'team' ? `${teams[currentTeamIndex]?.name ?? ''} · ` : ''}
-              {categoryName}
-            </span>
-            {session?.mode === 'solo' && safeZonePts > 0 && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">{categoryName}</span>
+            {safeZonePts > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -311,15 +449,6 @@ export default function QuizPage() {
             </p>
           )}
         </div>
-
-        {/* Team scores sidebar */}
-        {session?.mode === 'team' && teams.length > 0 && (
-          <div className="hidden lg:block w-44 shrink-0">
-            <div className="sticky top-4">
-              <TeamScoreboard teams={teams} currentTeamIndex={currentTeamIndex} />
-            </div>
-          </div>
-        )}
       </div>
     </Container>
   )

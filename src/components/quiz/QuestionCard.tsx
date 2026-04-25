@@ -25,12 +25,18 @@ export function QuestionCard({
   totalQuestions,
   onAnswer,
   timerSeconds = 30,
+  locked = false,
+  showTimer = true,
 }: {
   data: QuestionData
   questionNumber: number
   totalQuestions: number
   onAnswer: (correct: boolean, timeMs: number) => void
   timerSeconds?: number
+  /** When true, answer buttons are visible but non-interactive (waiting for buzz-in) */
+  locked?: boolean
+  /** When false, the timer is hidden and never fires */
+  showTimer?: boolean
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [isPaused, setIsPaused] = useState(false)
@@ -79,6 +85,7 @@ export function QuestionCard({
       <ProgressBar value={questionNumber - 1} max={totalQuestions} />
       <div className="flex items-center justify-between mt-4 mb-2">
         <span className="text-xs text-gray-500 dark:text-gray-400">{data.categoryName}</span>
+        {showTimer && (
         <div className="flex items-center gap-2">
           <span
             role="timer"
@@ -100,6 +107,7 @@ export function QuestionCard({
             {isPaused ? '▶' : '⏸'}
           </Button>
         </div>
+        )}
       </div>
       <p
         className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 leading-relaxed"
@@ -113,21 +121,21 @@ export function QuestionCard({
             key={answer}
             answer={answer}
             state={answerStates[answer] ?? 'default'}
-            disabled={answered || isPaused}
+            disabled={answered || isPaused || locked}
             onClick={() => handleAnswer(answer)}
           />
         ))}
       </div>
-      {isPaused && !answered && (
+      {isPaused && !answered && !locked && (
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
           ⏸ Paused — click ▶ to resume
         </p>
       )}
       <Timer
         seconds={TIMER_SECONDS}
-        isPaused={isPaused || answered}
-        onTick={setRemaining}
-        onExpire={() => handleAnswer(null, true)}
+        isPaused={isPaused || answered || !showTimer}
+        onTick={showTimer ? setRemaining : () => {}}
+        onExpire={showTimer ? () => handleAnswer(null, true) : () => {}}
       />
       <span className="sr-only" aria-live="polite">
         {remaining <= 5 && !answered && !isPaused ? `${remaining} seconds left` : ''}
