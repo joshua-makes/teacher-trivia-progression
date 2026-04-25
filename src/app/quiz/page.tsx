@@ -66,6 +66,7 @@ export default function QuizPage() {
   const [readingTimerRemaining, setReadingTimerRemaining] = useState(0)
   const [buzzTimerRemaining, setBuzzTimerRemaining] = useState(0)
   const teamLastResultRef = useRef<{ correct: true; teamName: string; pts: number } | { correct: false; correctAnswer: string } | null>(null)
+  const soloLastResultRef = useRef<{ correct: boolean; correctAnswer: string } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const buzzFlashRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const questionHistoryRef = useRef<QuestionHistoryItem[]>([])
@@ -74,6 +75,7 @@ export default function QuizPage() {
   const [fiftyfiftyUsed, setFiftyfiftyUsed] = useState(false)
   const [skipUsed, setSkipUsed] = useState(false)
   const [eliminatedAnswers, setEliminatedAnswers] = useState<string[]>([])
+  const [isSoloRevealed, setIsSoloRevealed] = useState(false)
   // Team: countdown shown on the answered flash screen
   const [answeredCountdown, setAnsweredCountdown] = useState<number | null>(null)
 
@@ -147,6 +149,7 @@ export default function QuizPage() {
       clearTimer()
 
       if (session.mode === 'solo') {
+        soloLastResultRef.current = { correct, correctAnswer: currentQuestion?.correctAnswer ?? '' }
         setGameState('answered')
         if (correct) {
           timerRef.current = setTimeout(() => {
@@ -271,6 +274,7 @@ export default function QuizPage() {
   // Reset eliminated answers when question changes
   useEffect(() => {
     setEliminatedAnswers([])
+    setIsSoloRevealed(false)
   }, [currentRung])
 
   // Countdown on the team answered flash
@@ -286,6 +290,33 @@ export default function QuizPage() {
     }, 1000)
     return () => clearInterval(id)
   }, [gameState, session?.mode])
+
+  // Spacebar / Enter to reveal question (solo mode)
+  useEffect(() => {
+    if (session?.mode !== 'solo' || isSoloRevealed || gameState !== 'playing') return
+    function onKey(e: KeyboardEvent) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault()
+        setIsSoloRevealed(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [session?.mode, isSoloRevealed, gameState])
+
+  // Spacebar to reveal question (team mode)
+  useEffect(() => {
+    if (session?.mode !== 'team' || isQuestionRevealed || gameState !== 'playing') return
+    function onKey(e: KeyboardEvent) {
+      if (e.code === 'Space') {
+        e.preventDefault()
+        setReadingTimerRemaining(timerSeconds)
+        setIsQuestionRevealed(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [session?.mode, isQuestionRevealed, gameState, timerSeconds])
 
   // Keyboard shortcuts 1–4 to buzz in teams (team mode only)
   useEffect(() => {
@@ -378,6 +409,33 @@ export default function QuizPage() {
               </p>
             ) : (
               <p className="text-sm text-gray-400 dark:text-gray-500 mt-5">Next question…</p>
+            )}
+          </div>
+        </div>
+      </Container>
+    )
+  }
+
+  // ── Solo: answered result flash ──────────────────────
+  if (gameState === 'answered' && session?.mode === 'solo') {
+    const result = soloLastResultRef.current
+    return (
+      <Container>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-sm mx-auto">
+            {result?.correct ? (
+              <>
+                <div className="text-6xl mb-4">✅</div>
+                <h2 className="text-3xl font-bold text-green-600 dark:text-green-400">Correct!</h2>
+                <p className="text-gray-500 dark:text-gray-400 mt-2">Keep climbing…</p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">❌</div>
+                <h2 className="text-3xl font-bold text-red-600 dark:text-red-400">Wrong!</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">The answer was:</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{result?.correctAnswer}</p>
+              </>
             )}
           </div>
         </div>
@@ -595,11 +653,11 @@ export default function QuizPage() {
   // ── SOLO MODE LAYOUT ──────────────────────────────────
   return (
     <Container>
-      <div className="flex gap-4 items-start">
+      <div className="flex gap-6 items-start">
         {/* Ladder sidebar */}
         <div className="hidden lg:block w-44 shrink-0">
           <div className="sticky top-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-2">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-2">
               Ladder
             </p>
             <LadderDisplay currentRung={currentRung} />
@@ -609,77 +667,115 @@ export default function QuizPage() {
         {/* Center */}
         <div className="flex-1 min-w-0">
           {/* Top bar */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-gray-500 dark:text-gray-400">{categoryName}</span>
-            {safeZonePts > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleWalkAway}
-                disabled={gameState !== 'playing'}
-                title="Take your safe zone points and walk away"
-              >
-                🚶 Walk Away ({formatPoints(safeZonePts)} pts)
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              Level {currentRung}
+              <span className="text-gray-400 dark:text-gray-600"> / {allQuestions.length}</span>
+              <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
+              {categoryName}
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+              ✕ End Game
+            </Button>
+          </div>
+
+          {/* ── COVER STATE ── */}
+          {!isSoloRevealed ? (
+            <div className="rounded-2xl bg-gray-900 dark:bg-gray-950 border border-gray-700 min-h-[420px] flex flex-col items-center justify-center text-center gap-6 p-10 shadow-xl">
+              <div className="text-[9rem] leading-none font-black text-gray-700 select-none">?</div>
+              <div>
+                <p className="text-sm font-semibold text-gray-300 mb-1">
+                  Level {currentRung} of {allQuestions.length}
+                  {currentRungData?.isSafeZone && <span className="ml-2 text-amber-400">🛡️ Safe Zone</span>}
+                </p>
+                <p className="text-gray-500 text-sm capitalize">
+                  {currentRungData?.difficulty} · {formatPoints(currentRungData?.points ?? 0)} pts
+                </p>
+              </div>
+              <Button size="lg" onClick={() => setIsSoloRevealed(true)} className="px-10">
+                Show Question
               </Button>
-            )}
-          </div>
+              {safeZonePts > 0 && (
+                <button
+                  onClick={handleWalkAway}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
+                >
+                  🚶 Walk away with {formatPoints(safeZonePts)} pts
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Lifelines row */}
+              <div className="flex items-center gap-2 mb-3 justify-between">
+                {safeZonePts > 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleWalkAway}
+                    disabled={gameState !== 'playing'}
+                  >
+                    🚶 Walk Away ({formatPoints(safeZonePts)})
+                  </Button>
+                ) : <div />}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleFiftyFifty}
+                    disabled={fiftyfiftyUsed || gameState !== 'playing'}
+                    title="Remove two wrong answers"
+                    className={`px-3 py-1.5 rounded-lg border-2 text-sm font-bold transition-all
+                      ${fiftyfiftyUsed
+                        ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                        : 'border-amber-400 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 cursor-pointer'
+                      }`}
+                  >
+                    50/50
+                  </button>
+                  <button
+                    onClick={handleSkip}
+                    disabled={skipUsed || gameState !== 'playing'}
+                    title="Skip this question (once per game)"
+                    className={`px-3 py-1.5 rounded-lg border-2 text-sm font-bold transition-all
+                      ${skipUsed
+                        ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                        : 'border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
+                      }`}
+                  >
+                    ⏭ Skip
+                  </button>
+                </div>
+              </div>
 
-          {/* Lifelines */}
-          <div className="flex gap-2 mb-3 justify-end">
-            <button
-              onClick={handleFiftyFifty}
-              disabled={fiftyfiftyUsed || gameState !== 'playing'}
-              title="Remove two wrong answers"
-              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-bold transition-all
-                ${ fiftyfiftyUsed
-                  ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                  : 'border-amber-400 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 cursor-pointer'
-                }`}
-            >
-              50/50
-            </button>
-            <button
-              onClick={handleSkip}
-              disabled={skipUsed || gameState !== 'playing'}
-              title="Skip this question (once per game)"
-              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-bold transition-all
-                ${ skipUsed
-                  ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                  : 'border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
-                }`}
-            >
-              ⏭ Skip
-            </button>
-          </div>
+              {/* Question card */}
+              {currentQuestion && (
+                <QuestionCard
+                  key={`rung-${currentRung}`}
+                  data={{
+                    question: currentQuestion.question,
+                    answers: currentQuestion.answers,
+                    correctAnswer: currentQuestion.correctAnswer,
+                    difficulty: currentQuestion.difficulty,
+                    categoryName,
+                  }}
+                  questionNumber={currentRung}
+                  totalQuestions={allQuestions.length}
+                  timerSeconds={timerSeconds}
+                  onAnswer={handleAnswer}
+                  eliminatedAnswers={eliminatedAnswers}
+                />
+              )}
 
-          {/* Question card */}
-          {currentQuestion && (
-            <QuestionCard
-              key={`rung-${currentRung}`}
-              data={{
-                question: currentQuestion.question,
-                answers: currentQuestion.answers,
-                correctAnswer: currentQuestion.correctAnswer,
-                difficulty: currentQuestion.difficulty,
-                categoryName,
-              }}
-              questionNumber={currentRung}
-              totalQuestions={allQuestions.length}
-              timerSeconds={timerSeconds}
-              onAnswer={handleAnswer}
-              eliminatedAnswers={eliminatedAnswers}
-            />
-          )}
-
-          {/* Level value */}
-          {currentRungData && (
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
-              {currentRungData.isSafeZone && '🛡️ Safe Zone · '}
-              {currentRungData.number === 15 && '🏆 Top of the Ladder · '}
-              <span className="font-semibold">{formatPoints(currentRungData.points)} points</span>
-              {' · '}
-              <span className="capitalize">{currentRungData.difficulty}</span>
-            </p>
+              {/* Level footer */}
+              {currentRungData && (
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
+                  {currentRungData.isSafeZone && '🛡️ Safe Zone · '}
+                  {currentRungData.number === allQuestions.length && '🏆 Final Level · '}
+                  <span className="font-semibold">{formatPoints(currentRungData.points)} points</span>
+                  {' · '}
+                  <span className="capitalize">{currentRungData.difficulty}</span>
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

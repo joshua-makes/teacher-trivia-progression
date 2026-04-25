@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Difficulty } from '@/lib/data/questions'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { ProgressBar } from '@/components/ui/ProgressBar'
 import { DifficultyBadge } from './DifficultyBadge'
 import { AnswerButton } from './AnswerButton'
 import { Timer } from './Timer'
@@ -90,42 +89,56 @@ export function QuestionCard({
   }, [data.question, timerSeconds])
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          Level {questionNumber} of {totalQuestions}
-        </span>
-        <DifficultyBadge difficulty={data.difficulty} />
-      </div>
-      <ProgressBar value={questionNumber - 1} max={totalQuestions} />
-      <div className="flex items-center justify-between mt-4 mb-2">
-        <span className="text-xs text-gray-500 dark:text-gray-400">{data.categoryName}</span>
-        {showTimer && (
-        <div className="flex items-center gap-2">
-          <span
-            role="timer"
-            aria-label={`${remaining} seconds remaining`}
-            className={`text-sm font-mono font-bold ${
-              remaining <= 10 ? 'text-red-500' : 'text-gray-600 dark:text-gray-300'
+    <Card className="p-6 overflow-hidden">
+      {/* Depleting timer bar — bleeds to card edges, color shifts as time runs low */}
+      {showTimer && (
+        <div className="-mx-6 -mt-6 mb-5 h-1.5 bg-gray-100 dark:bg-gray-800">
+          <div
+            className={`h-full transition-[width] duration-[950ms] ease-linear ${
+              remaining / TIMER_SECONDS > 0.5
+                ? 'bg-emerald-400 dark:bg-emerald-500'
+                : remaining / TIMER_SECONDS > 0.25
+                ? 'bg-amber-400 dark:bg-amber-500'
+                : 'bg-red-500 dark:bg-red-600'
             }`}
-          >
-            {remaining}s
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsPaused(p => !p)}
-            aria-pressed={isPaused}
-            aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
-            disabled={answered}
-          >
-            {isPaused ? '▶' : '⏸'}
-          </Button>
+            style={{ width: `${(remaining / TIMER_SECONDS) * 100}%` }}
+          />
         </div>
-        )}
+      )}
+      {/* Compact metadata row */}
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          {data.categoryName} · Lvl {questionNumber}/{totalQuestions}
+        </span>
+        <div className="flex items-center gap-2">
+          <DifficultyBadge difficulty={data.difficulty} />
+          {showTimer && (
+            <>
+              <span
+                role="timer"
+                aria-label={`${remaining} seconds remaining`}
+                className={`text-sm font-mono font-bold tabular-nums ${
+                  remaining <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                {remaining}s
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPaused(p => !p)}
+                aria-pressed={isPaused}
+                aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+                disabled={answered}
+              >
+                {isPaused ? '▶' : '⏸'}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       <p
-        className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-snug"
+        className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-snug"
         aria-live="polite"
       >
         {data.question}
