@@ -150,7 +150,7 @@ export default function ResultsPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {isWinner ? 'Top of the ladder!' : 'Points earned'}
           </p>
-          <p className="text-5xl font-bold text-blue-600 dark:text-blue-400 tabular-nums">
+          <p className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent tabular-nums">
             {formatPoints(points)}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -175,7 +175,7 @@ export default function ResultsPage() {
                   <div
                     className={cn(
                       'w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0',
-                      reached ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700',
+                      reached ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700',
                       isFinal && !completed && 'bg-red-400 text-white',
                     )}
                   >

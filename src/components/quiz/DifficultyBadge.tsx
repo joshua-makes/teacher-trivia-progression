@@ -5,15 +5,15 @@ export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
         difficulty === 'easy' &&
-          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+          'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
         difficulty === 'medium' &&
-          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        difficulty === 'hard' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+          'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
+        difficulty === 'hard' && 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'
       )}
     >
-      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+      {difficulty === 'easy' ? '✦ Easy' : difficulty === 'medium' ? '◆ Medium' : '★ Hard'}
     </span>
   )
 }

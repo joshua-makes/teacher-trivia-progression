@@ -128,7 +128,7 @@ export function QuestionCard({
         {data.question}
       </p>
       <div className="space-y-3">
-        {data.answers.map(answer => {
+        {data.answers.map((answer, idx) => {
           let displayState: AnswerState = answerStates[answer] ?? 'default'
           if (revealAnswer && !answered) {
             displayState = answer === data.correctAnswer ? 'missed' : 'default'
@@ -140,6 +140,7 @@ export function QuestionCard({
               state={displayState}
               disabled={answered || isPaused || locked || revealAnswer}
               onClick={() => handleAnswer(answer)}
+              index={idx}
             />
           )
         })}

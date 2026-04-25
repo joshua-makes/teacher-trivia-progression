@@ -15,16 +15,17 @@ export function Button({
   return (
     <button
       className={cn(
-        'font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+        'font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
         size === 'sm' && 'px-3 py-1.5 text-sm',
-        size === 'md' && 'px-4 py-2 text-base',
-        size === 'lg' && 'px-6 py-3 text-lg',
-        variant === 'primary' && 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+        size === 'md' && 'px-5 py-2.5 text-base',
+        size === 'lg' && 'px-8 py-3.5 text-lg',
+        variant === 'primary' &&
+          'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-md hover:shadow-lg focus:ring-indigo-500',
         variant === 'secondary' &&
-          'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
+          'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
         variant === 'ghost' &&
-          'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
-        variant === 'danger' && 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+          'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-400 dark:text-gray-400 dark:hover:bg-gray-800',
+        variant === 'danger' && 'bg-red-600 text-white hover:bg-red-500 shadow-md focus:ring-red-500',
         className
       )}
       {...props}

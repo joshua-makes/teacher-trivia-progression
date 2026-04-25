@@ -50,12 +50,14 @@ export default function HomePage() {
     <Container>
       <div className="max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="text-center mb-10 pt-4">
-          <div className="text-6xl mb-3">🏆</div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-            Trivia Levels
+        <div className="text-center mb-12 pt-6">
+          <div className="text-7xl mb-4 drop-shadow-sm">🏆</div>
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              Trivia Levels
+            </span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-lg mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-md mx-auto leading-relaxed">
             Classroom trivia for K–12. Questions get harder as you climb — can your class reach the top?
           </p>
         </div>
@@ -63,8 +65,9 @@ export default function HomePage() {
         <div className="space-y-5">
           {/* Step 1: Grade Level */}
           <Card className="p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
-              1 · Grade Level
+            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">1</span>
+              Grade Level
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {GRADE_LEVELS.map(gl => (
@@ -74,8 +77,8 @@ export default function HomePage() {
                   className={cn(
                     'rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all text-center',
                     gradeLevel === gl.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 text-gray-700 dark:text-gray-300',
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-700 dark:text-gray-300',
                   )}
                 >
                   <div className="text-xl mb-0.5">{gl.emoji}</div>
@@ -88,8 +91,9 @@ export default function HomePage() {
           {/* Step 2: Category */}
           <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                2 · Category
+              <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">2</span>
+                Category
               </h2>
               <button
                 onClick={() => {
@@ -111,8 +115,8 @@ export default function HomePage() {
                   className={cn(
                     'rounded-lg border-2 p-3 text-left transition-all',
                     categoryId === cat.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-sm'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
                   )}
                   aria-pressed={categoryId === cat.id}
                 >
@@ -126,8 +130,9 @@ export default function HomePage() {
 
           {/* Step 3: Game Mode */}
           <Card className="p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
-              3 · Game Mode
+            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">3</span>
+              Game Mode
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -135,8 +140,8 @@ export default function HomePage() {
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'solo'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-sm'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300',
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
                 )}
                 aria-pressed={mode === 'solo'}
               >
@@ -149,8 +154,8 @@ export default function HomePage() {
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'team'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-sm'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300',
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
                 )}
                 aria-pressed={mode === 'team'}
               >
@@ -164,8 +169,9 @@ export default function HomePage() {
           {/* Step 4: Team Setup */}
           {mode === 'team' && (
             <Card className="p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
-                4 · Team Setup
+              <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center font-bold">4</span>
+                Team Setup
               </h2>
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Teams:</span>
@@ -177,8 +183,8 @@ export default function HomePage() {
                       className={cn(
                         'w-9 h-9 rounded-full border-2 font-bold text-sm transition-all',
                         teamCount === n
-                          ? 'border-blue-500 bg-blue-500 text-white'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-blue-400',
+                          ? 'border-indigo-500 bg-indigo-500 text-white'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400',
                       )}
                     >
                       {n}

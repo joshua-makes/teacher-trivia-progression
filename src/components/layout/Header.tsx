@@ -3,11 +3,11 @@ import { ThemeToggle } from './ThemeToggle'
 
 export function Header() {
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-gray-200/80 dark:border-gray-800/80 backdrop-blur-md bg-white/80 dark:bg-gray-950/80">
+        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
         <Link
           href="/"
-          className="text-xl font-bold text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity"
+          className="text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
         >
           � Trivia Levels
         </Link>
