@@ -520,24 +520,6 @@ export default function QuizPage() {
                   />
                 )}
 
-                {/* Teacher ✓/✗ controls */}
-                {buzzing && gameState === 'playing' && (
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={() => handleAnswer(true)}
-                      className="flex-1 py-6 rounded-2xl bg-green-500 hover:bg-green-600 active:scale-95 text-white font-black text-2xl min-h-[80px] shadow-md transition-all select-none"
-                    >
-                      ✓ Correct
-                    </button>
-                    <button
-                      onClick={() => handleAnswer(false)}
-                      className="flex-1 py-6 rounded-2xl bg-red-500 hover:bg-red-600 active:scale-95 text-white font-black text-2xl min-h-[80px] shadow-md transition-all select-none"
-                    >
-                      ✗ Wrong
-                    </button>
-                  </div>
-                )}
-
                 {/* Buzz-in panel */}
                 {gameState === 'playing' && (
                   <div className="mt-4">
