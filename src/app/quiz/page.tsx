@@ -7,9 +7,13 @@ import { QuestionCard } from '@/components/quiz/QuestionCard'
 import { LadderDisplay } from '@/components/quiz/LadderDisplay'
 import { TeamScoreboard } from '@/components/quiz/TeamScoreboard'
 import { Timer } from '@/components/quiz/Timer'
+import { DifficultyBadge } from '@/components/quiz/DifficultyBadge'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { loadSession, saveSession, type Team, type QuestionHistoryItem } from '@/lib/session'
+import { Confetti } from '@/components/ui/Confetti'
+import { loadSession, saveSession, saveLiveQuestion, clearLiveQuestion, type Team, type QuestionHistoryItem, getSeenIds, recordSeenIds } from '@/lib/session'
+import { playCorrect, playWrong, playComplete } from '@/lib/sounds'
+import { loadCustomQuestions } from '@/lib/customQuestions'
 import { QUESTIONS } from '@/lib/data/questions'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, getSafeZonePoints, getTimerSeconds, formatPoints } from '@/lib/ladder'
@@ -33,21 +37,45 @@ type GameState =
   | 'error'
 
 const TEAM_BG: Record<string, string> = {
-  red: 'bg-red-500 dark:bg-red-600',
-  blue: 'bg-blue-500 dark:bg-blue-600',
-  green: 'bg-green-500 dark:bg-green-600',
+  red:    'bg-red-500 dark:bg-red-600',
+  orange: 'bg-orange-500 dark:bg-orange-600',
+  amber:  'bg-amber-500 dark:bg-amber-600',
+  green:  'bg-green-500 dark:bg-green-600',
+  teal:   'bg-teal-500 dark:bg-teal-600',
+  blue:   'bg-blue-500 dark:bg-blue-600',
+  indigo: 'bg-indigo-500 dark:bg-indigo-600',
   purple: 'bg-purple-600 dark:bg-purple-700',
+  violet: 'bg-violet-500 dark:bg-violet-600',
+  pink:   'bg-pink-500 dark:bg-pink-600',
+  rose:   'bg-rose-500 dark:bg-rose-600',
 }
 
 const TEAM_BORDER: Record<string, string> = {
-  red: 'border-red-400', blue: 'border-blue-400', green: 'border-green-400', purple: 'border-purple-400',
+  red:    'border-red-400',
+  orange: 'border-orange-400',
+  amber:  'border-amber-400',
+  green:  'border-green-400',
+  teal:   'border-teal-400',
+  blue:   'border-blue-400',
+  indigo: 'border-indigo-400',
+  purple: 'border-purple-400',
+  violet: 'border-violet-400',
+  pink:   'border-pink-400',
+  rose:   'border-rose-400',
 }
 
 const TEAM_TEXT: Record<string, string> = {
-  red: 'text-red-600 dark:text-red-400',
-  blue: 'text-blue-600 dark:text-blue-400',
-  green: 'text-green-600 dark:text-green-400',
+  red:    'text-red-600 dark:text-red-400',
+  orange: 'text-orange-600 dark:text-orange-400',
+  amber:  'text-amber-600 dark:text-amber-400',
+  green:  'text-green-600 dark:text-green-400',
+  teal:   'text-teal-600 dark:text-teal-400',
+  blue:   'text-blue-600 dark:text-blue-400',
+  indigo: 'text-indigo-600 dark:text-indigo-400',
   purple: 'text-purple-600 dark:text-purple-400',
+  violet: 'text-violet-600 dark:text-violet-400',
+  pink:   'text-pink-600 dark:text-pink-400',
+  rose:   'text-rose-600 dark:text-rose-400',
 }
 
 const TEAM_QUESTION_POINTS: Record<string, number> = { easy: 100, medium: 200, hard: 300 }
@@ -78,6 +106,10 @@ export default function QuizPage() {
   const [isSoloRevealed, setIsSoloRevealed] = useState(false)
   // Team: countdown shown on the answered flash screen
   const [answeredCountdown, setAnsweredCountdown] = useState<number | null>(null)
+  // Pause state (any mode)
+  const [isPaused, setIsPaused] = useState(false)
+  // Keyboard shortcut overlay
+  const [showShortcuts, setShowShortcuts] = useState(false)
 
   const clearTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -85,7 +117,6 @@ export default function QuizPage() {
 
   const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team', questionCount: number): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
-    const perDiff = Math.ceil(questionCount / diffs.length)
 
     const toQuizQ = (q: { id: string; question: string; correct: string; incorrect: string[] }, diff: Difficulty): QuizQuestion => ({
       id: q.id,
@@ -95,16 +126,57 @@ export default function QuizPage() {
       difficulty: diff,
     })
 
+    // ── Custom questions mode ─────────────────────────────
+    if (catId === 0) {
+      const customs = loadCustomQuestions() ?? []
+      const qs: QuizQuestion[] = customs.slice(0, questionCount).map((q, idx) => ({
+        id: `custom-${idx}`,
+        question: q.question,
+        answers: shuffleArray([q.correct, ...q.incorrect]),
+        correctAnswer: q.correct,
+        difficulty: q.difficulty ?? diffs[idx % 3],
+      }))
+      return mode === 'team' ? shuffleArray(qs) : qs
+    }
+
+    const perDiff = Math.ceil(questionCount / diffs.length)
+
+    // Load recently-seen IDs so we can deprioritise them
+    const seenIds = getSeenIds(catId, gradeLevel)
+
+    // Track used IDs across all difficulty loops to guarantee no duplicates
+    const usedIds = new Set<string>()
+
     // Build a bucket for each difficulty, falling back from category-specific → grade-wide if needed
     let pools: QuizQuestion[] = []
     for (const diff of diffs) {
-      const byGrade = QUESTIONS.filter(q =>
-        q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never)
+      // Fresh (unseen) questions for this category + difficulty
+      const freshByCat = QUESTIONS.filter(q =>
+        q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id) && !seenIds.has(q.id)
       )
-      const pool = byGrade.length >= Math.min(perDiff, 3)
-        ? byGrade
-        : QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never))
-      pools.push(...shuffleArray(pool).slice(0, perDiff).map(q => toQuizQ(q, diff)))
+      // All questions for this category + difficulty (including seen, as fallback)
+      const allByCat = QUESTIONS.filter(q =>
+        q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id)
+      )
+      // Grade-wide fresh fallback
+      const freshGrade = QUESTIONS.filter(q =>
+        q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id) && !seenIds.has(q.id)
+      )
+      // Grade-wide full fallback
+      const allGrade = QUESTIONS.filter(q =>
+        q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id)
+      )
+
+      // Pick the best available pool: prefer fresh-by-category, then fresh-grade, then allow repeats
+      let pool: typeof QUESTIONS
+      if (freshByCat.length >= Math.min(perDiff, 3)) pool = freshByCat
+      else if (allByCat.length >= Math.min(perDiff, 3)) pool = allByCat
+      else if (freshGrade.length >= Math.min(perDiff, 3)) pool = freshGrade
+      else pool = allGrade
+
+      const selected = shuffleArray(pool).slice(0, perDiff)
+      selected.forEach(q => usedIds.add(q.id))
+      pools.push(...selected.map(q => toQuizQ(q, diff)))
     }
 
     // If still short (e.g. K-2 has few medium/hard), fill from any grade-appropriate questions
@@ -139,8 +211,11 @@ export default function QuizPage() {
 
   const currentQuestion = allQuestions[currentRung - 1] ?? null
   const currentRungData = LADDER[currentRung - 1]
-  const timerSeconds = session ? getTimerSeconds(session.gradeLevel) : 30
-  const categoryName = CATEGORIES.find(c => c.id === session?.categoryId)?.name ?? ''
+  const timerSeconds = session?.timerSeconds ?? (session ? getTimerSeconds(session.gradeLevel) : 30)
+  const buzzTimerSeconds = session?.buzzTimerSeconds ?? timerSeconds
+  const categoryName = session?.categoryId === 0
+    ? 'Custom Questions'
+    : CATEGORIES.find(c => c.id === session?.categoryId)?.name ?? ''
 
   const finishGame = useCallback((pts: number, winTeams: Team[], completed: boolean) => {
     const sess = loadSession()
@@ -151,10 +226,12 @@ export default function QuizPage() {
       sess.teams = winTeams.length > 0 ? winTeams : sess.teams
       sess.questionHistory = questionHistoryRef.current
       saveSession(sess)
+      // Record seen question IDs for smart rotation next game
+      recordSeenIds(sess.categoryId, sess.gradeLevel, allQuestions.map(q => q.id))
     }
     setGameState('complete')
     timerRef.current = setTimeout(() => router.push('/results'), 1200)
-  }, [currentRung, session?.mode, router])
+  }, [currentRung, session?.mode, router, allQuestions])
 
   const handleAnswer = useCallback(
     (correct: boolean) => {
@@ -169,8 +246,19 @@ export default function QuizPage() {
 
       if (session.mode === 'solo') {
         soloLastResultRef.current = { correct, correctAnswer: currentQuestion?.correctAnswer ?? '' }
+        // Track question history for solo mode (shown on results page)
+        if (currentQuestion) {
+          questionHistoryRef.current = [...questionHistoryRef.current, {
+            questionNumber: currentRung,
+            questionText: currentQuestion.question,
+            correctAnswer: currentQuestion.correctAnswer,
+            answeredBy: correct ? 'You' : null,
+            correct,
+          }]
+        }
         setGameState('answered')
         if (correct) {
+          playCorrect()
           timerRef.current = setTimeout(() => {
             if (currentRung >= allQuestions.length) {
               finishGame(1_000_000, [], true)
@@ -180,6 +268,7 @@ export default function QuizPage() {
             }
           }, 1000)
         } else {
+          playWrong()
           timerRef.current = setTimeout(() => {
             finishGame(getSafeZonePoints(currentRung), [], false)
           }, 2500)
@@ -191,6 +280,7 @@ export default function QuizPage() {
         const q = allQuestions[currentRung - 1]
 
         if (correct) {
+          playCorrect()
           const pts = TEAM_QUESTION_POINTS[q?.difficulty ?? 'easy']
           const newTeams = teams.map((t, i) =>
             i === bidx ? { ...t, score: t.score + pts } : t
@@ -222,6 +312,7 @@ export default function QuizPage() {
 
           if (newTried.length >= teams.length) {
             // All teams failed — show answer and move on
+            playWrong()
             setBuzzedTeamIndex(null)
             teamLastResultRef.current = { correct: false, correctAnswer: q?.correctAnswer ?? '' }
             questionHistoryRef.current = [...questionHistoryRef.current, {
@@ -249,7 +340,7 @@ export default function QuizPage() {
               // Only one team left — auto-buzz them in so the game keeps moving
               const autoIdx = remaining[0]!
               setBuzzedTeamIndex(autoIdx)
-              setBuzzTimerRemaining(session ? getTimerSeconds(session.gradeLevel) : 30)
+              setBuzzTimerRemaining(buzzTimerSeconds)
             } else {
               setBuzzedTeamIndex(null)
             }
@@ -257,7 +348,7 @@ export default function QuizPage() {
         }
       }
     },
-    [gameState, session, currentRung, allQuestions, buzzedTeamIndex, triedTeamIndices, teams, finishGame],
+    [gameState, session, currentRung, allQuestions, buzzedTeamIndex, triedTeamIndices, teams, finishGame, buzzTimerSeconds, currentQuestion],
   )
 
   const handleWalkAway = useCallback(() => {
@@ -295,6 +386,25 @@ export default function QuizPage() {
     setEliminatedAnswers([])
     setIsSoloRevealed(false)
   }, [currentRung])
+
+  // Keep live question in localStorage so /teacher page can poll it
+  useEffect(() => {
+    if (!currentQuestion || gameState !== 'playing') return
+    saveLiveQuestion({
+      questionNumber: currentRung,
+      totalQuestions: allQuestions.length,
+      questionText: currentQuestion.question,
+      answers: currentQuestion.answers,
+      correctAnswer: currentQuestion.correctAnswer,
+      categoryName,
+      difficulty: currentQuestion.difficulty,
+    })
+  }, [currentRung, currentQuestion, gameState, allQuestions.length, categoryName])
+
+  // Clear live question when game is over
+  useEffect(() => {
+    if (gameState === 'complete') clearLiveQuestion()
+  }, [gameState])
 
   // Countdown on the team answered flash
   useEffect(() => {
@@ -345,7 +455,7 @@ export default function QuizPage() {
       const idx = parseInt(e.key) - 1
       if (idx >= 0 && idx < teams.length) {
         if (!triedTeamIndices.includes(idx)) {
-          setBuzzTimerRemaining(timerSeconds)
+          setBuzzTimerRemaining(buzzTimerSeconds)
           setBuzzedTeamIndex(idx)
           setBuzzFlashTeam(teams[idx] ?? null)
           if (buzzFlashRef.current) clearTimeout(buzzFlashRef.current)
@@ -355,7 +465,36 @@ export default function QuizPage() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [session?.mode, isQuestionRevealed, gameState, buzzedTeamIndex, teams, triedTeamIndices, timerSeconds])
+  }, [session?.mode, isQuestionRevealed, gameState, buzzedTeamIndex, teams, triedTeamIndices, timerSeconds, buzzTimerSeconds])
+
+  // Play completion fanfare once when game finishes
+  useEffect(() => {
+    if (gameState === 'complete') playComplete()
+  }, [gameState])
+
+  // Global keyboard: P to pause/unpause, T to open teacher window, ? to toggle shortcut overlay, Escape to dismiss overlay
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      // Don't intercept if the user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === '?') { e.preventDefault(); setShowShortcuts(s => !s); return }
+      if (e.key === 'Escape') { setShowShortcuts(false); return }
+      if (e.code === 'KeyT' && gameState !== 'complete') {
+        e.preventDefault()
+        window.open('/teacher', 'ladderquiz-teacher', 'width=900,height=600,noopener')
+        return
+      }
+      if (e.code === 'KeyP' && gameState === 'playing') {
+        e.preventDefault()
+        setIsPaused(p => !p)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [gameState])
+
+  // Close teacher view on each new question (no longer needed — teacher window polls)
+  // useEffect(() => { setShowTeacherView(false) }, [currentRung])
 
   // ── Loading ──────────────────────────────────────────
   if (gameState === 'loading') {
@@ -387,6 +526,7 @@ export default function QuizPage() {
   if (gameState === 'complete') {
     return (
       <Container>
+        <Confetti />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="text-6xl mb-4 animate-bounce">🪜</div>
@@ -473,6 +613,44 @@ export default function QuizPage() {
 
     return (
       <Container>
+        {/* Pause overlay */}
+        {isPaused && (
+          <div
+            className="fixed inset-0 z-[90] bg-gray-950/95 flex flex-col items-center justify-center gap-6 cursor-pointer"
+            onClick={() => setIsPaused(false)}
+          >
+            <div className="text-7xl">⏸</div>
+            <h2 className="text-4xl font-black text-white">Paused</h2>
+            <p className="text-gray-400 text-sm">Press <kbd className="px-2 py-0.5 rounded bg-gray-800 font-mono border border-gray-700">P</kbd> or click anywhere to resume</p>
+          </div>
+        )}
+        {/* Keyboard shortcut overlay */}
+        {showShortcuts && (
+          <div
+            className="fixed inset-0 z-[90] bg-gray-950/90 flex items-center justify-center"
+            onClick={() => setShowShortcuts(false)}
+          >
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-bold text-white mb-5">Keyboard Shortcuts</h2>
+              <div className="space-y-3">
+                {[
+                  ['Space', 'Reveal question'],
+                  ['1 – 4', 'Buzz in team'],
+                  ['P', 'Pause / resume'],
+                  ['T', 'Open teacher window'],
+                  ['?', 'Show this overlay'],
+                  ['Esc', 'Close overlay'],
+                ].map(([key, desc]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <kbd className="px-2.5 py-1 rounded bg-gray-800 font-mono text-sm text-gray-200 border border-gray-700">{key}</kbd>
+                    <span className="text-sm text-gray-300">{desc}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setShowShortcuts(false)} className="mt-6 w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors">Close</button>
+            </div>
+          </div>
+        )}
         {/* Full-screen buzz-in flash */}
         {buzzFlashTeam && (
           <div
@@ -497,9 +675,26 @@ export default function QuizPage() {
                 <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
                 {categoryName}
               </span>
-              <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-                ✕ End Game
-              </Button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowShortcuts(true)}
+                  className="p-1.5 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
+                  title="Keyboard shortcuts (?)"
+                  aria-label="Show keyboard shortcuts"
+                >?
+                </button>
+                <button
+                  onClick={() => setIsPaused(p => !p)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="Pause (P)"
+                  aria-label={isPaused ? 'Resume' : 'Pause'}
+                >
+                  {isPaused ? '▶️' : '⏸️'}
+                </button>
+                <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                  ✕ End Game
+                </Button>
+              </div>
             </div>
 
             {/* ── COVER STATE: question not yet revealed ── */}
@@ -507,10 +702,11 @@ export default function QuizPage() {
               <div className="rounded-2xl bg-gray-900 dark:bg-gray-950 border border-gray-700 min-h-[420px] flex flex-col items-center justify-center text-center gap-6 p-10 shadow-xl">
                 <div className="text-[9rem] leading-none font-black text-gray-700 select-none">?</div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-300 mb-1">
+                  <p className="text-sm font-semibold text-gray-300 mb-2">
                     Question {currentRung} of {allQuestions.length}
                   </p>
-                  <p className="text-gray-500 text-sm">
+                  {currentQuestion && <DifficultyBadge difficulty={currentQuestion.difficulty} />}
+                  <p className="text-gray-500 text-sm mt-2">
                     Get everyone&apos;s attention, then show the question.
                   </p>
                 </div>
@@ -524,6 +720,11 @@ export default function QuizPage() {
                 >
                   Show Question
                 </Button>
+                <p className="text-xs text-gray-600">
+                  Press{' '}
+                  <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-xs border border-gray-700">Space</kbd>
+                  {' '}to reveal
+                </p>
               </div>
             ) : (
               <>
@@ -544,7 +745,7 @@ export default function QuizPage() {
                     </div>
                     <Timer
                       key={`buzz-${currentRung}-${buzzedTeamIndex}-${triedTeamIndices.length}`}
-                      seconds={timerSeconds}
+                      seconds={buzzTimerSeconds}
                       isPaused={false}
                       onTick={setBuzzTimerRemaining}
                       onExpire={() => handleAnswer(false)}
@@ -612,7 +813,7 @@ export default function QuizPage() {
                             key={team.id}
                             onClick={() => {
                               if (!tried && buzzedTeamIndex === null) {
-                                setBuzzTimerRemaining(timerSeconds)
+                                setBuzzTimerRemaining(buzzTimerSeconds)
                                 setBuzzedTeamIndex(i)
                                 setBuzzFlashTeam(teams[i] ?? null)
                                 if (buzzFlashRef.current) clearTimeout(buzzFlashRef.current)
@@ -672,6 +873,43 @@ export default function QuizPage() {
   // ── SOLO MODE LAYOUT ──────────────────────────────────
   return (
     <Container>
+      {/* Pause overlay */}
+      {isPaused && (
+        <div
+          className="fixed inset-0 z-[90] bg-gray-950/95 flex flex-col items-center justify-center gap-6 cursor-pointer"
+          onClick={() => setIsPaused(false)}
+        >
+          <div className="text-7xl">⏸</div>
+          <h2 className="text-4xl font-black text-white">Paused</h2>
+          <p className="text-gray-400 text-sm">Press <kbd className="px-2 py-0.5 rounded bg-gray-800 font-mono border border-gray-700">P</kbd> or click anywhere to resume</p>
+        </div>
+      )}
+      {/* Keyboard shortcut overlay */}
+      {showShortcuts && (
+        <div
+          className="fixed inset-0 z-[90] bg-gray-950/90 flex items-center justify-center"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-white mb-5">Keyboard Shortcuts</h2>
+            <div className="space-y-3">
+              {[
+                ['Space / Enter', 'Reveal question'],
+                ['P', 'Pause / resume'],
+                ['T', 'Open teacher window'],
+                ['?', 'Show this overlay'],
+                ['Esc', 'Close overlay'],
+              ].map(([key, desc]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <kbd className="px-2.5 py-1 rounded bg-gray-800 font-mono text-sm text-gray-200 border border-gray-700">{key}</kbd>
+                  <span className="text-sm text-gray-300">{desc}</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowShortcuts(false)} className="mt-6 w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors">Close</button>
+          </div>
+        </div>
+      )}
       <div className="flex gap-6 items-start">
         {/* Ladder sidebar */}
         <div className="hidden lg:block w-44 shrink-0 sticky top-4">
@@ -693,9 +931,26 @@ export default function QuizPage() {
               <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
               {categoryName}
             </span>
-            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-              ✕ End Game
-            </Button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="p-1.5 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
+                title="Keyboard shortcuts (?)"
+                aria-label="Show keyboard shortcuts"
+              >?
+              </button>
+              <button
+                onClick={() => setIsPaused(p => !p)}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="Pause (P)"
+                aria-label={isPaused ? 'Resume' : 'Pause'}
+              >
+                {isPaused ? '▶️' : '⏸️'}
+              </button>
+              <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                ✕ End Game
+              </Button>
+            </div>
           </div>
 
           {/* ── COVER STATE ── */}
@@ -703,17 +958,25 @@ export default function QuizPage() {
             <div className="rounded-2xl bg-gray-900 dark:bg-gray-950 border border-gray-700 min-h-[420px] flex flex-col items-center justify-center text-center gap-6 p-10 shadow-xl">
               <div className="text-[9rem] leading-none font-black text-gray-700 select-none">?</div>
               <div>
-                <p className="text-sm font-semibold text-gray-300 mb-1">
+                <p className="text-sm font-semibold text-gray-300 mb-2">
                   Level {currentRung} of {allQuestions.length}
                   {currentRungData?.isSafeZone && <span className="ml-2 text-amber-400">🛡️ Safe Zone</span>}
                 </p>
-                <p className="text-gray-500 text-sm capitalize">
-                  {currentRungData?.difficulty} · {formatPoints(currentRungData?.points ?? 0)} pts
+                {currentQuestion && <DifficultyBadge difficulty={currentQuestion.difficulty} />}
+                <p className="text-gray-500 text-sm mt-2 capitalize">
+                  {formatPoints(currentRungData?.points ?? 0)} pts
                 </p>
               </div>
               <Button size="lg" onClick={() => setIsSoloRevealed(true)} className="px-10">
                 Show Question
               </Button>
+              <p className="text-xs text-gray-600">
+                Press{' '}
+                <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-xs border border-gray-700">Space</kbd>
+                {' '}or{' '}
+                <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-xs border border-gray-700">Enter</kbd>
+                {' '}to reveal
+              </p>
               {safeZonePts > 0 && (
                 <button
                   onClick={handleWalkAway}
@@ -779,6 +1042,7 @@ export default function QuizPage() {
                   questionNumber={currentRung}
                   totalQuestions={allQuestions.length}
                   timerSeconds={timerSeconds}
+                  isPaused={isPaused}
                   onAnswer={handleAnswer}
                   eliminatedAnswers={eliminatedAnswers}
                 />

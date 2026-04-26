@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link'
 import Image from 'next/image'
 import { ThemeToggle } from './ThemeToggle'
+import { FullscreenButton } from './FullscreenButton'
 
 export function Header() {
   return (
@@ -22,11 +23,29 @@ export function Header() {
             Ladder Quiz
           </span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <Link
+            href="/questions"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title="Manage your custom question bank"
+          >
+            ✏️ Questions
+          </Link>
+          <Link
+            href="/teacher"
+            target="_blank"
+            rel="noopener"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title="Open teacher view in a new window"
+          >
+            👁 Teacher
+          </Link>
+          <FullscreenButton />
           <ThemeToggle />
         </div>
       </div>
     </header>
   )
 }
+
 

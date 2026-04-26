@@ -6,16 +6,23 @@ import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { loadSession, clearSession, type Team, type QuestionHistoryItem } from '@/lib/session'
+import { loadSession, clearSession, createSession, saveSession, getPersonalBest, savePersonalBest, type Team, type QuestionHistoryItem } from '@/lib/session'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 const TEAM_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   red:    { bg: 'bg-red-500',    text: 'text-white', border: 'border-red-400' },
-  blue:   { bg: 'bg-blue-500',   text: 'text-white', border: 'border-blue-400' },
+  orange: { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-400' },
+  amber:  { bg: 'bg-amber-500',  text: 'text-white', border: 'border-amber-400' },
   green:  { bg: 'bg-green-500',  text: 'text-white', border: 'border-green-400' },
+  teal:   { bg: 'bg-teal-500',   text: 'text-white', border: 'border-teal-400' },
+  blue:   { bg: 'bg-blue-500',   text: 'text-white', border: 'border-blue-400' },
+  indigo: { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-400' },
   purple: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-400' },
+  violet: { bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-400' },
+  pink:   { bg: 'bg-pink-500',   text: 'text-white', border: 'border-pink-400' },
+  rose:   { bg: 'bg-rose-500',   text: 'text-white', border: 'border-rose-400' },
 }
 
 function getLadderEmoji(rung: number, completed: boolean): string {
@@ -38,6 +45,10 @@ export default function ResultsPage() {
   const [copied, setCopied] = useState(false)
   const [questionCount, setQuestionCount] = useState(15)
   const [displayScore, setDisplayScore] = useState(0)
+  const [isNewBest, setIsNewBest] = useState(false)
+  const [prevBest, setPrevBest] = useState<number | null>(null)
+  // Store session snapshot for "Play again (same settings)"
+  const [replaySession, setReplaySession] = useState<ReturnType<typeof loadSession>>(null)
 
   useEffect(() => {
     const session = loadSession()
@@ -49,9 +60,20 @@ export default function ResultsPage() {
     setRung(session.currentRung ?? 1)
     setTeams(session.teams ?? [])
     const cat = CATEGORIES.find(c => c.id === session.categoryId)
-    setCategoryName(cat?.name ?? 'General Knowledge')
+    setCategoryName(session.categoryId === 0 ? 'Custom Questions' : cat?.name ?? 'General Knowledge')
     setQuestionHistory(session.questionHistory ?? [])
     setQuestionCount(session.questionCount ?? 15)
+    setReplaySession(session)
+
+    // Personal best (solo only)
+    if (session.mode === 'solo') {
+      const score = session.finalPoints !== null ? session.finalPoints : getSafeZonePoints(session.currentRung ?? 1)
+      const prev = getPersonalBest(session.categoryId, session.gradeLevel)
+      setPrevBest(prev)
+      const isNew = savePersonalBest(session.categoryId, session.gradeLevel, score)
+      setIsNewBest(isNew)
+    }
+
     setLoading(false)
   }, [router])
 
@@ -83,6 +105,24 @@ export default function ResultsPage() {
   function handlePlayAgain() {
     clearSession()
     router.push('/')
+  }
+
+  function handlePlayAgainSame() {
+    if (!replaySession) { router.push('/'); return }
+    // Re-create a fresh session with the same settings
+    const fresh = createSession(
+      replaySession.categoryId,
+      replaySession.mode,
+      replaySession.gradeLevel,
+      replaySession.teams
+        ? replaySession.teams.map(t => ({ ...t, score: 0 }))
+        : null,
+      replaySession.questionCount,
+      replaySession.timerSeconds,
+      replaySession.buzzTimerSeconds,
+    )
+    saveSession(fresh)
+    router.push('/quiz')
   }
 
   // ── Team results ──────────────────────────────────────
@@ -253,6 +293,16 @@ export default function ResultsPage() {
               {points > 0 ? `🛡️ Safe zone — kept ${formatPoints(points)} pts` : 'No safe zone reached'}
             </p>
           )}
+          {isNewBest && (
+            <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm font-semibold">
+              🏆 New Personal Best!
+            </div>
+          )}
+          {!isNewBest && prevBest !== null && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              Personal best: {formatPoints(prevBest)} pts
+            </p>
+          )}
         </Card>
 
         {/* Ladder progress */}
@@ -290,12 +340,18 @@ export default function ResultsPage() {
         <div className="flex gap-2 justify-center print:hidden">
           <button
             onClick={() => {
+              const recap = questionHistory.length > 0
+                ? ['', 'Question Recap:', ...questionHistory.map(h =>
+                    `Q${h.questionNumber}: ${h.questionText}\n   Answer: ${h.correctAnswer} — ${h.answeredBy ? '✓ Correct' : '✗ Wrong'}`
+                  )]
+                : []
               const text = [
                 `Ladder Quiz — ${categoryName}`,
                 `Date: ${new Date().toLocaleDateString()}`,
                 '',
                 isWinner ? '🏆 Grand Champion!' : `Reached level ${levelsReached} of ${questionCount}`,
                 `Score: ${formatPoints(points)} pts`,
+                ...recap,
               ].join('\n')
               void navigator.clipboard.writeText(text)
               setCopied(true)
@@ -313,9 +369,40 @@ export default function ResultsPage() {
           </button>
         </div>
 
-        <div className="flex justify-center pb-8">
-          <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-10">
-            🔄 Play Again
+        {/* Solo question recap */}
+        {questionHistory.length > 0 && (
+          <Card className="p-5 print:block">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Question Recap</h2>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {questionHistory.map(item => (
+                <div key={item.questionNumber} className="py-2.5 flex items-start gap-3">
+                  <div className={cn(
+                    'mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0',
+                    item.answeredBy ? 'bg-emerald-500 text-white' : 'bg-red-400 text-white',
+                  )}>
+                    {item.answeredBy ? '✓' : '✗'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Q{item.questionNumber}</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">{item.questionText}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Answer: <span className="font-medium text-gray-700 dark:text-gray-300">{item.correctAnswer}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pb-8">
+          {replaySession && (
+            <Button variant="primary" size="lg" onClick={handlePlayAgainSame} className="px-8">
+              🔄 Play Again (same)
+            </Button>
+          )}
+          <Button variant="secondary" size="lg" onClick={handlePlayAgain} className="px-8">
+            🏠 New Game
           </Button>
         </div>
       </div>

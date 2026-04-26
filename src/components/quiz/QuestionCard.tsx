@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Difficulty } from '@/lib/data/questions'
 import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import { DifficultyBadge } from './DifficultyBadge'
 import { AnswerButton } from './AnswerButton'
 import { Timer } from './Timer'
@@ -24,6 +23,7 @@ export function QuestionCard({
   totalQuestions,
   onAnswer,
   timerSeconds = 30,
+  isPaused: externalIsPaused = false,
   locked = false,
   showTimer = true,
   revealAnswer = false,
@@ -35,6 +35,8 @@ export function QuestionCard({
   totalQuestions: number
   onAnswer: (correct: boolean, timeMs: number) => void
   timerSeconds?: number
+  /** When true, pauses the countdown timer */
+  isPaused?: boolean
   /** When true, answer buttons are visible but non-interactive (waiting for buzz-in) */
   locked?: boolean
   /** When false, the timer is hidden and never fires */
@@ -47,11 +49,12 @@ export function QuestionCard({
   eliminatedAnswers?: string[]
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
-  const [isPaused, setIsPaused] = useState(false)
   const [remaining, setRemaining] = useState(timerSeconds)
   const [answered, setAnswered] = useState(false)
   const [startTime] = useState(Date.now())
   const TIMER_SECONDS = timerSeconds
+
+  const isPaused = externalIsPaused
 
   const handleAnswer = useCallback(
     (answer: string | null, timedOut = false) => {
@@ -84,7 +87,6 @@ export function QuestionCard({
   useEffect(() => {
     setAnswerStates({})
     setAnswered(false)
-    setIsPaused(false)
     setRemaining(timerSeconds)
   }, [data.question, timerSeconds])
 
@@ -123,16 +125,6 @@ export function QuestionCard({
               >
                 {remaining}s
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsPaused(p => !p)}
-                aria-pressed={isPaused}
-                aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
-                disabled={answered}
-              >
-                {isPaused ? '▶' : '⏸'}
-              </Button>
             </>
           )}
         </div>

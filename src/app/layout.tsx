@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
@@ -7,10 +7,19 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
+export const viewport: Viewport = {
+  themeColor: '#6366f1',
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://ladderquiz.com'),
   title: 'Ladder Quiz',
   description: 'Classroom trivia game for K–12. Ladder-style questions that get harder as you climb — solo or team mode.',
+  appleWebApp: {
+    capable: true,
+    title: 'LadderQuiz',
+    statusBarStyle: 'black-translucent',
+  },
   openGraph: {
     title: 'Ladder Quiz',
     description: 'Classroom trivia for K–12. Ladder-style, team-ready, and fun.',
