@@ -61,6 +61,15 @@ export default function QuestionsPage() {
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
+  // AI prompt builder
+  const [showAiPrompt, setShowAiPrompt] = useState(false)
+  const [aiSubject, setAiSubject] = useState('')
+  const [aiTopic, setAiTopic] = useState('')
+  const [aiGrade, setAiGrade] = useState('3–5')
+  const [aiCount, setAiCount] = useState(10)
+  const [aiDifficulty, setAiDifficulty] = useState<'mixed' | 'easy' | 'medium' | 'hard'>('mixed')
+  const [aiCopied, setAiCopied] = useState(false)
+
   const activeSet = sets.find(s => s.id === activeSetId) ?? null
 
   useEffect(() => {
@@ -195,6 +204,41 @@ export default function QuestionsPage() {
     const qs = [...activeSet.questions]
     ;[qs[idx], qs[idx + 1]] = [qs[idx + 1], qs[idx]]
     persistActiveQuestions(qs)
+  }
+
+  function buildAiPrompt(): string {
+    const subjectPart = aiSubject.trim() ? ` in ${aiSubject.trim()}` : ''
+    const topicPart = aiTopic.trim() ? ` about "${aiTopic.trim()}"` : ''
+    const diffPart =
+      aiDifficulty === 'mixed'
+        ? 'a mix of easy, medium, and hard'
+        : `all "${aiDifficulty}"`
+    return `Generate ${aiCount} trivia questions${topicPart}${subjectPart} suitable for Grade ${aiGrade} students. Make the difficulty ${diffPart}.
+
+Return ONLY a JSON array — no explanation, no markdown code fences, just raw JSON. Each object must have exactly these 4 keys:
+
+[
+  {
+    "question": "Question text here?",
+    "correct": "The correct answer",
+    "incorrect": ["Wrong answer 1", "Wrong answer 2", "Wrong answer 3"],
+    "difficulty": "easy"
+  }
+]
+
+Rules:
+- "difficulty" must be one of: "easy", "medium", or "hard"
+- "incorrect" must be an array of exactly 3 strings
+- Questions must be age-appropriate for Grade ${aiGrade} students
+- Incorrect answers should be plausible but clearly wrong
+- Return ONLY the JSON array, nothing else`
+  }
+
+  function handleCopyPrompt() {
+    navigator.clipboard.writeText(buildAiPrompt()).then(() => {
+      setAiCopied(true)
+      setTimeout(() => setAiCopied(false), 2500)
+    })
   }
 
   // ══════════════════════════════════════════════════════
@@ -455,6 +499,108 @@ export default function QuestionsPage() {
             </div>
           </Card>
         </div>
+
+        {/* AI Prompt Builder */}
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">✨ Generate with AI</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Build a prompt, paste it into ChatGPT / Claude / Gemini, then import the result below.</p>
+            </div>
+            <button
+              onClick={() => setShowAiPrompt(p => !p)}
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ml-4"
+            >
+              {showAiPrompt ? '▾ Collapse' : '▸ Expand'}
+            </button>
+          </div>
+
+          {showAiPrompt && (
+            <div className="mt-4 space-y-4">
+              {/* Form fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+                  <input
+                    type="text"
+                    value={aiSubject}
+                    onChange={e => setAiSubject(e.target.value)}
+                    placeholder="e.g. Science, History, Maths…"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Topic</label>
+                  <input
+                    type="text"
+                    value={aiTopic}
+                    onChange={e => setAiTopic(e.target.value)}
+                    placeholder="e.g. The Solar System, World War II…"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Grade Level</label>
+                  <select
+                    value={aiGrade}
+                    onChange={e => setAiGrade(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="K–2">K–2</option>
+                    <option value="3–5">3–5</option>
+                    <option value="6–8">6–8</option>
+                    <option value="9–12">9–12</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">No. of Questions</label>
+                  <select
+                    value={aiCount}
+                    onChange={e => setAiCount(Number(e.target.value))}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {[5, 10, 15, 20, 25, 30].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
+                  <select
+                    value={aiDifficulty}
+                    onChange={e => setAiDifficulty(e.target.value as typeof aiDifficulty)}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="mixed">Mixed</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Generated prompt preview */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Your prompt</label>
+                <pre className="w-full rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-3 text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
+                  {buildAiPrompt()}
+                </pre>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button variant="primary" size="sm" onClick={handleCopyPrompt}>
+                  {aiCopied ? '✓ Copied!' : '📋 Copy Prompt'}
+                </Button>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  Paste into ChatGPT, Claude, Gemini, etc. — then import the JSON below.
+                </span>
+              </div>
+            </div>
+          )}
+        </Card>
 
         {/* Import JSON */}
         <Card className="p-5">
