@@ -54,21 +54,24 @@ export default function HomePage() {
     <Container>
       <div className="max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="rounded-3xl bg-gray-900 dark:bg-gray-950 border border-gray-800 text-center py-16 px-8 mb-10 overflow-hidden">
-          <Emoji emoji="🏆" size={96} className="mx-auto mb-5" />
+        <div className="rounded-3xl bg-gray-900 dark:bg-gray-900 border border-gray-800 dark:border-gray-700 text-center py-16 px-8 mb-10 overflow-hidden shadow-xl" style={{ animation: 'fadeInUp 0.5s ease both' }}>
+          <div className="relative inline-block mb-5">
+            <div className="absolute inset-0 rounded-full bg-indigo-500/30 blur-3xl scale-[2.5]" aria-hidden="true" />
+            <Emoji emoji="🪜" size={96} className="relative" />
+          </div>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-3 tracking-tight">
-            Trivia Levels
+            Ladder Quiz
           </h1>
           <p className="text-gray-400 text-lg max-w-sm mx-auto leading-relaxed">
-            Classroom trivia for K–12. Questions get harder as you climb.
+            Classroom trivia for K–12. Climb the ladder as questions get harder.
           </p>
         </div>
 
         <div className="space-y-5">
           {/* Step 1: Grade Level */}
-          <Card className="p-5">
+          <Card className="p-5" style={{ animation: 'fadeInUp 0.5s ease both', animationDelay: '80ms' }}>
             <h2 className="flex items-baseline gap-3 mb-4">
-              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">1</span>
+              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">1</span>
               <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Grade Level</span>
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -77,12 +80,15 @@ export default function HomePage() {
                   key={gl.value}
                   onClick={() => { setGradeLevel(gl.value); setCategoryId(null) }}
                   className={cn(
-                    'rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all text-center',
+                    'relative rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all text-center',
                     gradeLevel === gl.value
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
                       : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-700 dark:text-gray-300',
                   )}
                 >
+                  {gradeLevel === gl.value && (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                  )}
                   <Emoji emoji={gl.emoji} size={36} className="mx-auto mb-1" />
                   <div>{gl.label}</div>
                 </button>
@@ -91,10 +97,10 @@ export default function HomePage() {
           </Card>
 
           {/* Step 2: Category */}
-          <Card className="p-5">
+          <Card className="p-5" style={{ animation: 'fadeInUp 0.5s ease both', animationDelay: '160ms' }}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="flex items-baseline gap-3">
-                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">2</span>
+                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">2</span>
                 <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Category</span>
               </h2>
               <button
@@ -115,13 +121,16 @@ export default function HomePage() {
                   key={cat.id}
                   onClick={() => setCategoryId(cat.id)}
                   className={cn(
-                    'rounded-lg border-2 p-3 text-left transition-all',
+                    'relative rounded-lg border-2 p-3 text-left transition-all',
                     categoryId === cat.id
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
                       : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
                   )}
                   aria-pressed={categoryId === cat.id}
                 >
+                  {categoryId === cat.id && (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                  )}
                   <Emoji emoji={cat.emoji} size={32} className="mb-1" />
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{cat.name}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{cat.description}</div>
@@ -166,22 +175,25 @@ export default function HomePage() {
           </Card>
 
           {/* Step 3: Game Mode */}
-          <Card className="p-5">
+          <Card className="p-5" style={{ animation: 'fadeInUp 0.5s ease both', animationDelay: '240ms' }}>
             <h2 className="flex items-baseline gap-3 mb-4">
-              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">3</span>
+              <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">3</span>
               <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Game Mode</span>
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setMode('solo')}
                 className={cn(
-                  'rounded-lg border-2 p-4 text-center transition-all',
+                  'relative rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'solo'
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
                     : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
                 )}
                 aria-pressed={mode === 'solo'}
               >
+                {mode === 'solo' && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                )}
                 <Emoji emoji="🧑‍🎓" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Classroom</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Whole class climbs together</div>
@@ -189,13 +201,16 @@ export default function HomePage() {
               <button
                 onClick={() => setMode('team')}
                 className={cn(
-                  'rounded-lg border-2 p-4 text-center transition-all',
+                  'relative rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'team'
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
                     : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
                 )}
                 aria-pressed={mode === 'team'}
               >
+                {mode === 'team' && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                )}
                 <Emoji emoji="🏅" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Teams</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buzz-in, take turns, compete</div>
@@ -224,9 +239,9 @@ export default function HomePage() {
 
           {/* Step 4: Team Setup */}
           {mode === 'team' && (
-            <Card className="p-5">
+            <Card className="p-5" style={{ animation: 'fadeInUp 0.5s ease both' }}>
               <h2 className="flex items-baseline gap-3 mb-4">
-                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-800 select-none">4</span>
+                <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">4</span>
                 <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Team Setup</span>
               </h2>
               <div className="flex items-center gap-3 mb-4">
@@ -271,7 +286,7 @@ export default function HomePage() {
           )}
 
           {/* Start */}
-          <div className="flex justify-center pb-8">
+          <div className="flex justify-center pb-8" style={{ animation: 'fadeInUp 0.5s ease both', animationDelay: '320ms' }}>
             <Button
               variant="primary"
               size="lg"

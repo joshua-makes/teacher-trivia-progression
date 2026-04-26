@@ -8,14 +8,14 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://trivialevels.com'),
-  title: 'Trivia Levels',
+  metadataBase: new URL('https://ladderquiz.com'),
+  title: 'Ladder Quiz',
   description: 'Classroom trivia game for K–12. Ladder-style questions that get harder as you climb — solo or team mode.',
   openGraph: {
-    title: 'Trivia Levels',
+    title: 'Ladder Quiz',
     description: 'Classroom trivia for K–12. Ladder-style, team-ready, and fun.',
-    url: 'https://trivialevels.com',
-    siteName: 'Trivia Levels',
+    url: 'https://ladderquiz.com',
+    siteName: 'Ladder Quiz',
   },
 }
 

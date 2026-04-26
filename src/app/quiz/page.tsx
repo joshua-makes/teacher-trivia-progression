@@ -85,22 +85,41 @@ export default function QuizPage() {
 
   const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team', questionCount: number): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
-    const pools: QuizQuestion[] = []
+    const perDiff = Math.ceil(questionCount / diffs.length)
+
+    const toQuizQ = (q: { id: string; question: string; correct: string; incorrect: string[] }, diff: Difficulty): QuizQuestion => ({
+      id: q.id,
+      question: q.question,
+      answers: shuffleArray([q.correct, ...q.incorrect]),
+      correctAnswer: q.correct,
+      difficulty: diff,
+    })
+
+    // Build a bucket for each difficulty, falling back from category-specific → grade-wide if needed
+    let pools: QuizQuestion[] = []
     for (const diff of diffs) {
       const byGrade = QUESTIONS.filter(q =>
         q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never)
       )
-      const pool = byGrade.length >= 5
+      const pool = byGrade.length >= Math.min(perDiff, 3)
         ? byGrade
         : QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never))
-      pools.push(...shuffleArray(pool).slice(0, 5).map(q => ({
-        id: q.id,
-        question: q.question,
-        answers: shuffleArray([q.correct, ...q.incorrect]),
-        correctAnswer: q.correct,
-        difficulty: diff,
-      })))
+      pools.push(...shuffleArray(pool).slice(0, perDiff).map(q => toQuizQ(q, diff)))
     }
+
+    // If still short (e.g. K-2 has few medium/hard), fill from any grade-appropriate questions
+    if (pools.length < questionCount) {
+      const usedIds = new Set(pools.map(q => q.id))
+      const diffOrder: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 }
+      const fillPool = QUESTIONS.filter(q =>
+        q.grades.includes(gradeLevel as never) && !usedIds.has(q.id)
+      )
+      const extras = shuffleArray(fillPool)
+        .slice(0, questionCount - pools.length)
+        .map(q => toQuizQ(q, q.difficulty))
+      pools = [...pools, ...extras].sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty])
+    }
+
     const ordered = mode === 'team' ? shuffleArray(pools) : pools
     return ordered.slice(0, questionCount)
   }, [])
@@ -344,7 +363,7 @@ export default function QuizPage() {
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="text-5xl mb-4 animate-pulse">🏆</div>
+            <div className="text-5xl mb-4 animate-pulse">🪜</div>
             <p className="text-gray-600 dark:text-gray-300 font-semibold text-lg">Loading questions…</p>
           </div>
         </div>
@@ -370,7 +389,7 @@ export default function QuizPage() {
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="text-6xl mb-4 animate-bounce">🏆</div>
+            <div className="text-6xl mb-4 animate-bounce">🪜</div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {session?.mode === 'team' ? 'Game Complete!' : 'Amazing!'}
             </h2>
@@ -387,7 +406,7 @@ export default function QuizPage() {
     return (
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center max-w-sm mx-auto">
+          <Card className="p-10 text-center max-w-sm w-full mx-auto" style={{ animation: 'scaleIn 0.2s ease both' }}>
             {result?.correct ? (
               <>
                 <div className="text-6xl mb-4">✅</div>
@@ -410,7 +429,7 @@ export default function QuizPage() {
             ) : (
               <p className="text-sm text-gray-400 dark:text-gray-500 mt-5">Next question…</p>
             )}
-          </div>
+          </Card>
         </div>
       </Container>
     )
@@ -422,7 +441,7 @@ export default function QuizPage() {
     return (
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center max-w-sm mx-auto">
+          <Card className="p-10 text-center max-w-sm w-full mx-auto" style={{ animation: 'scaleIn 0.2s ease both' }}>
             {result?.correct ? (
               <>
                 <div className="text-6xl mb-4">✅</div>
@@ -437,7 +456,7 @@ export default function QuizPage() {
                 <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{result?.correctAnswer}</p>
               </>
             )}
-          </div>
+          </Card>
         </div>
       </Container>
     )
@@ -655,13 +674,13 @@ export default function QuizPage() {
     <Container>
       <div className="flex gap-6 items-start">
         {/* Ladder sidebar */}
-        <div className="hidden lg:block w-44 shrink-0">
-          <div className="sticky top-4">
+        <div className="hidden lg:block w-44 shrink-0 sticky top-4">
+          <Card className="p-2">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-2">
               Ladder
             </p>
             <LadderDisplay currentRung={currentRung} totalRungs={allQuestions.length} />
-          </div>
+          </Card>
         </div>
 
         {/* Center */}
@@ -767,13 +786,15 @@ export default function QuizPage() {
 
               {/* Level footer */}
               {currentRungData && (
-                <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
-                  {currentRungData.isSafeZone && '🛡️ Safe Zone · '}
-                  {currentRungData.number === allQuestions.length && '🏆 Final Level · '}
-                  <span className="font-semibold">{formatPoints(currentRungData.points)} points</span>
-                  {' · '}
-                  <span className="capitalize">{currentRungData.difficulty}</span>
-                </p>
+                <Card className="px-4 py-2.5 mt-3 text-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {currentRungData.isSafeZone && '🛡️ Safe Zone · '}
+                    {currentRungData.number === allQuestions.length && '🏆 Final Level · '}
+                    <span className="font-semibold">{formatPoints(currentRungData.points)} points</span>
+                    {' · '}
+                    <span className="capitalize">{currentRungData.difficulty}</span>
+                  </p>
+                </Card>
               )}
             </>
           )}

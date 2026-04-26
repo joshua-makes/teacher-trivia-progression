@@ -19,7 +19,7 @@ const TEAM_STYLES: Record<string, { bg: string; text: string; border: string }> 
 }
 
 function getLadderEmoji(rung: number, completed: boolean): string {
-  if (completed && rung === 15) return '🏆'
+  if (completed) return '🪜'
   if (rung >= 11) return '🔥'
   if (rung >= 6) return '⭐'
   return '📚'
@@ -36,6 +36,8 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true)
   const [questionHistory, setQuestionHistory] = useState<QuestionHistoryItem[]>([])
   const [copied, setCopied] = useState(false)
+  const [questionCount, setQuestionCount] = useState(15)
+  const [displayScore, setDisplayScore] = useState(0)
 
   useEffect(() => {
     const session = loadSession()
@@ -49,8 +51,24 @@ export default function ResultsPage() {
     const cat = CATEGORIES.find(c => c.id === session.categoryId)
     setCategoryName(cat?.name ?? 'General Knowledge')
     setQuestionHistory(session.questionHistory ?? [])
+    setQuestionCount(session.questionCount ?? 15)
     setLoading(false)
   }, [router])
+
+  // Animate score counting up once loaded
+  useEffect(() => {
+    if (loading || mode !== 'solo') return
+    const target = finalPoints !== null ? finalPoints : getSafeZonePoints(rung)
+    if (target === 0) { setDisplayScore(0); return }
+    let current = 0
+    const increment = Math.max(50, Math.ceil(target / 35))
+    const timer = setInterval(() => {
+      current = Math.min(current + increment, target)
+      setDisplayScore(current)
+      if (current >= target) clearInterval(timer)
+    }, 25)
+    return () => clearInterval(timer)
+  }, [loading, finalPoints, rung, mode])
 
   if (loading) {
     return (
@@ -81,7 +99,7 @@ export default function ResultsPage() {
         .map(item => `Q${item.questionNumber}: ${item.questionText}\n  \u2713 ${item.correctAnswer} \u2014 ${item.correct ? item.answeredBy : 'No one got it'}`)
         .join('\n\n')
       const text = [
-        `Trivia Levels \u2014 ${categoryName}`,
+        `Ladder Quiz \u2014 ${categoryName}`,
         `Date: ${new Date().toLocaleDateString()}`,
         '',
         'FINAL SCORES',
@@ -96,11 +114,11 @@ export default function ResultsPage() {
     return (
       <Container>
         <div className="max-w-2xl mx-auto space-y-6 py-4">
-          <div className="text-center">
+          <Card className="p-6 text-center">
             <div className="text-5xl mb-3">🏅</div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">Game Over!</h1>
-            <p className="text-gray-500 dark:text-gray-400">{categoryName} · {rung - 1} levels completed</p>
-          </div>
+            <p className="text-gray-500 dark:text-gray-400">{categoryName} · {rung - 1} of {questionCount} levels</p>
+          </Card>
 
           {/* Winner banner */}
           {winner && (
@@ -204,31 +222,31 @@ export default function ResultsPage() {
 
   // ── Solo results ──────────────────────────────────────
   const points = finalPoints ?? getSafeZonePoints(rung)
-  const isWinner = completed && rung === 15
+  const isWinner = completed
   const rungData = LADDER[rung - 1]
-  const levelsReached = completed ? 15 : rung - 1
+  const levelsReached = completed ? questionCount : rung - 1
 
   return (
     <Container>
       <div className="max-w-xl mx-auto space-y-6 py-4">
-        <div className="text-center">
+        <Card className="p-6 text-center" style={{ animation: 'scaleIn 0.35s ease both' }}>
           <div className="text-6xl mb-3">{getLadderEmoji(rung, completed)}</div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             {isWinner ? '🎉 Grand Champion!' : completed ? 'Game Complete!' : 'Nice Try!'}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">{categoryName}</p>
-        </div>
+        </Card>
 
         {/* Score card */}
-        <Card className="p-6 text-center">
+        <Card className="p-6 text-center" style={{ animation: 'scaleIn 0.35s ease both', animationDelay: '80ms' }}>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {isWinner ? 'Top of the ladder!' : 'Points earned'}
           </p>
           <p className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
-            {formatPoints(points)}
+            {formatPoints(displayScore)}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Reached level <strong>{levelsReached}</strong> of 15
+            Reached level <strong>{levelsReached}</strong> of {questionCount}
           </p>
           {!isWinner && rungData && (
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
@@ -241,7 +259,7 @@ export default function ResultsPage() {
         <Card className="p-5">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ladder Progress</h2>
           <div className="space-y-1.5">
-            {LADDER.map(r => {
+            {LADDER.slice(0, questionCount).map(r => {
               const reached = r.number <= levelsReached
               const isFinal = r.number === levelsReached && !isWinner
               return (
@@ -273,10 +291,10 @@ export default function ResultsPage() {
           <button
             onClick={() => {
               const text = [
-                `Trivia Levels — ${categoryName}`,
+                `Ladder Quiz — ${categoryName}`,
                 `Date: ${new Date().toLocaleDateString()}`,
                 '',
-                isWinner ? '🏆 Grand Champion!' : `Reached level ${levelsReached} of 15`,
+                isWinner ? '🏆 Grand Champion!' : `Reached level ${levelsReached} of ${questionCount}`,
                 `Score: ${formatPoints(points)} pts`,
               ].join('\n')
               void navigator.clipboard.writeText(text)

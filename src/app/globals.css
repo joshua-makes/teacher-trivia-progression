@@ -1,20 +1,28 @@
 @import "tailwindcss";
 
+/* Use class-based dark mode — toggles when .dark is on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Wire Next.js font variable into Tailwind's font-sans utility */
+@theme {
+  --font-family-sans: var(--font-sans, 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif);
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
     --dot-color: #e5e7eb;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --dot-color: #1f2937;
+    --dot-color: #1e293b;
+  }
+  html {
+    @apply antialiased;
   }
   body {
-    @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-50 min-h-screen antialiased;
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-50 min-h-screen;
     background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
     background-size: 24px 24px;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   ::selection {
     @apply bg-indigo-200 text-indigo-900 dark:bg-indigo-800 dark:text-indigo-100;
@@ -24,6 +32,16 @@
 @keyframes buzzFlash {
   0%, 55% { opacity: 1; }
   100%     { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @media print {

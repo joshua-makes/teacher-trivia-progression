@@ -23,7 +23,7 @@ export function AnswerButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'w-full text-left px-4 py-4 rounded-xl border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-3',
+        'w-full text-left px-4 py-4 rounded-xl border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center gap-3 active:scale-[0.98]',
         state === 'default' &&
           !disabled &&
           'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-gray-800 dark:text-gray-200',
