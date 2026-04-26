@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { loadSession, clearSession, createSession, saveSession, getPersonalBest, savePersonalBest, type Team, type QuestionHistoryItem } from '@/lib/session'
 import { CATEGORIES } from '@/lib/data/categories'
+import { loadQuestionSets } from '@/lib/customQuestions'
 import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
@@ -60,7 +61,13 @@ export default function ResultsPage() {
     setRung(session.currentRung ?? 1)
     setTeams(session.teams ?? [])
     const cat = CATEGORIES.find(c => c.id === session.categoryId)
-    setCategoryName(session.categoryId === 0 ? 'Custom Questions' : cat?.name ?? 'General Knowledge')
+    if (session.categoryId === 0) {
+      const sets = loadQuestionSets()
+      const set = sets.find(s => s.id === session.customSetId)
+      setCategoryName(set?.name ?? 'Custom Questions')
+    } else {
+      setCategoryName(cat?.name ?? 'General Knowledge')
+    }
     setQuestionHistory(session.questionHistory ?? [])
     setQuestionCount(session.questionCount ?? 15)
     setReplaySession(session)

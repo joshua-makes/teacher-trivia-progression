@@ -36,6 +36,7 @@ export type QuizSession = {
   questionHistory: QuestionHistoryItem[]
   timerSeconds: number | null       // null = use grade-level default
   buzzTimerSeconds: number | null   // null = fall back to timerSeconds (team mode only)
+  customSetId?: string              // which question set to play (categoryId === 0 only)
 }
 
 const SESSION_KEY = 'trivia_session'
@@ -48,6 +49,7 @@ export function createSession(
   questionCount = 15,
   timerSeconds: number | null = null,
   buzzTimerSeconds: number | null = null,
+  customSetId?: string,
 ): QuizSession {
   return {
     categoryId,
@@ -66,6 +68,7 @@ export function createSession(
     questionHistory: [],
     timerSeconds,
     buzzTimerSeconds,
+    customSetId,
   }
 }
 

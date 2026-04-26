@@ -10,7 +10,7 @@ import { CATEGORIES } from '@/lib/data/categories'
 import { QUESTIONS } from '@/lib/data/questions'
 import { GRADE_LEVELS, getTimerSeconds, type GradeLevel } from '@/lib/ladder'
 import { clearSession, createSession, loadSession, saveSession, type QuizSession, type Team } from '@/lib/session'
-import { loadCustomQuestions, saveCustomQuestions, clearCustomQuestions, parseCustomQuestionsJSON } from '@/lib/customQuestions'
+import { loadQuestionSets, type QuestionSet } from '@/lib/customQuestions'
 import { cn } from '@/lib/utils'
 import { Emoji } from '@/components/ui/Emoji'
 
@@ -65,11 +65,9 @@ export default function HomePage() {
   const [timerSeconds, setTimerSeconds] = useState(() => getTimerSeconds('3-5'))
   const [buzzTimerSeconds, setBuzzTimerSeconds] = useState(() => getTimerSeconds('3-5'))
   const [teamColors, setTeamColors] = useState<TeamColor[]>([...DEFAULT_TEAM_COLORS])
-  // Custom questions
-  const [customQCount, setCustomQCount] = useState(0)
-  const [showCustomImport, setShowCustomImport] = useState(false)
-  const [customJson, setCustomJson] = useState('')
-  const [customError, setCustomError] = useState<string | null>(null)
+  // Custom question sets
+  const [customSets, setCustomSets] = useState<QuestionSet[]>([])
+  const [selectedSetId, setSelectedSetId] = useState<string | null>(null)
 
   // Reset timer defaults whenever grade level changes
   useEffect(() => {
@@ -83,15 +81,22 @@ export default function HomePage() {
     if (sess && !sess.completed) {
       setResumableSession(sess)
     }
-    // Restore any saved custom questions count
-    const customs = loadCustomQuestions()
-    if (customs && customs.length > 0) setCustomQCount(customs.length)
+    const sets = loadQuestionSets()
+    setCustomSets(sets)
+    // Auto-select a set from ?setId= param (e.g. coming from /questions "Play" button)
+    const params = new URLSearchParams(window.location.search)
+    const setId = params.get('setId')
+    if (setId && sets.some(s => s.id === setId)) {
+      setCategoryId(0)
+      setSelectedSetId(setId)
+    }
   }, [])
 
   const filteredCategories = CATEGORIES.filter(c => c.gradeLevels.includes(gradeLevel))
 
   function handleStart() {
     if (categoryId === null) return
+    if (categoryId === 0 && !selectedSetId) return
     clearSession()
     const teams: Team[] | null =
       mode === 'team'
@@ -110,6 +115,7 @@ export default function HomePage() {
       questionCount,
       timerSeconds,
       mode === 'team' ? buzzTimerSeconds : null,
+      categoryId === 0 ? (selectedSetId ?? undefined) : undefined,
     )
     saveSession(session)
     router.push('/quiz')
@@ -248,8 +254,8 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Question preview */}
-            {categoryId && (
+            {/* Question preview — built-in categories only */}
+            {categoryId !== null && categoryId !== 0 && (
               <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                 <button
                   onClick={() => setShowPreview(p => !p)}
@@ -283,96 +289,49 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Custom Questions import */}
+            {/* Custom question sets — shown below built-in categories */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      if (customQCount > 0) {
-                        setCategoryId(0)
-                        setShowCustomImport(false)
-                      } else {
-                        setShowCustomImport(p => !p)
-                      }
-                    }}
-                    className={cn(
-                      'flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 text-sm font-semibold transition-all',
-                      categoryId === 0
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-600 dark:text-gray-400',
-                    )}
-                  >
-                    ✏️ Custom Questions
-                    {customQCount > 0 && (
-                      <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded-full font-bold">
-                        {customQCount}
-                      </span>
-                    )}
-                    {categoryId === 0 && (
-                      <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
-                    )}
-                  </button>
-                  {customQCount > 0 && (
+              {customSets.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Your Sets</span>
                     <button
-                      onClick={() => {
-                        clearCustomQuestions()
-                        setCustomQCount(0)
-                        if (categoryId === 0) setCategoryId(null)
-                      }}
-                      className="text-xs text-red-400 hover:text-red-500 transition-colors"
+                      onClick={() => router.push('/questions')}
+                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-500 transition-colors"
                     >
-                      × Clear
+                      Manage →
                     </button>
-                  )}
-                </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {customSets.map(set => (
+                      <button
+                        key={set.id}
+                        onClick={() => { setCategoryId(0); setSelectedSetId(set.id) }}
+                        className={cn(
+                          'relative rounded-lg border-2 p-3 text-left transition-all',
+                          categoryId === 0 && selectedSetId === set.id
+                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
+                            : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                        )}
+                        aria-pressed={categoryId === 0 && selectedSetId === set.id}
+                      >
+                        {categoryId === 0 && selectedSetId === set.id && (
+                          <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                        )}
+                        <span className="text-2xl mb-1 block">{set.emoji}</span>
+                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight">{set.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{set.questions.length} questions</div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
                 <button
-                  onClick={() => setShowCustomImport(p => !p)}
-                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                  onClick={() => router.push('/questions')}
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
-                  {showCustomImport ? '▾ Hide' : '▸ Import JSON'}
+                  ✏️ Create a custom question set →
                 </button>
-              </div>
-
-              {showCustomImport && (
-                <div className="space-y-2.5 mt-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Paste a JSON array. Each item needs{' '}
-                    <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">question</code>,{' '}
-                    <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">correct</code>, and{' '}
-                    <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">incorrect</code>{' '}
-                    (array of 3 strings). Optional:{' '}
-                    <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">difficulty</code>{' '}
-                    (easy / medium / hard).
-                  </p>
-                  <textarea
-                    value={customJson}
-                    onChange={e => { setCustomJson(e.target.value); setCustomError(null) }}
-                    rows={6}
-                    spellCheck={false}
-                    placeholder={`[\n  {\n    "question": "What is 2 + 2?",\n    "correct": "4",\n    "incorrect": ["3", "5", "6"],\n    "difficulty": "easy"\n  }\n]`}
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-xs font-mono text-gray-800 dark:text-gray-200 resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {customError && (
-                    <p className="text-xs text-red-500 dark:text-red-400 font-medium">{customError}</p>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={() => {
-                      const result = parseCustomQuestionsJSON(customJson)
-                      if ('error' in result) { setCustomError(result.error); return }
-                      saveCustomQuestions(result.questions)
-                      setCustomQCount(result.questions.length)
-                      setCategoryId(0)
-                      setShowCustomImport(false)
-                      setCustomJson('')
-                      setCustomError(null)
-                    }}
-                  >
-                    Load {customJson.trim() ? `(${(() => { try { const a = JSON.parse(customJson); return Array.isArray(a) ? `${a.length} questions` : '…' } catch { return '…' } })()})` : 'Questions'}
-                  </Button>
-                </div>
               )}
             </div>
           </Card>
@@ -397,7 +356,7 @@ export default function HomePage() {
                 {mode === 'solo' && (
                   <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                 )}
-                <Emoji emoji="🧑‍🎓" size={44} className="mx-auto mb-2" />
+                <Emoji emoji="🏫" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Classroom</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Whole class climbs together</div>
               </button>
@@ -414,7 +373,7 @@ export default function HomePage() {
                 {mode === 'team' && (
                   <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                 )}
-                <Emoji emoji="🏅" size={44} className="mx-auto mb-2" />
+                <Emoji emoji="🏆" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Teams</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buzz-in, take turns, compete</div>
               </button>

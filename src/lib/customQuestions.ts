@@ -8,12 +8,65 @@ export type CustomQuestion = {
   difficulty?: Difficulty
 }
 
-/** Generates a short random ID for new questions */
+export type QuestionSet = {
+  id: string
+  name: string
+  emoji: string
+  questions: CustomQuestion[]
+  createdAt: number
+}
+
+/** Generates a short random ID for a question */
 export function makeId(): string {
   return `cq-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
 }
 
+/** Generates a short random ID for a question set */
+export function makeSetId(): string {
+  return `qs-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+}
+
 const STORAGE_KEY = 'trivia_custom_questions'
+const SETS_KEY = 'trivia_question_sets'
+
+// ── Question Sets ─────────────────────────────────────────────────────────────
+
+export function loadQuestionSets(): QuestionSet[] {
+  if (typeof window === 'undefined') return []
+  // Migrate legacy flat list → first set called "My Questions"
+  const legacyRaw = localStorage.getItem(STORAGE_KEY)
+  const setsRaw = localStorage.getItem(SETS_KEY)
+  if (legacyRaw && !setsRaw) {
+    try {
+      const qs = JSON.parse(legacyRaw) as CustomQuestion[]
+      const migrated: QuestionSet[] = [{
+        id: makeSetId(),
+        name: 'My Questions',
+        emoji: '📝',
+        questions: qs.map((q, i) => ({ ...q, id: q.id ?? `cq-legacy-${i}` })),
+        createdAt: Date.now(),
+      }]
+      localStorage.setItem(SETS_KEY, JSON.stringify(migrated))
+      localStorage.removeItem(STORAGE_KEY)
+      return migrated
+    } catch {
+      return []
+    }
+  }
+  if (!setsRaw) return []
+  try {
+    return JSON.parse(setsRaw) as QuestionSet[]
+  } catch {
+    return []
+  }
+}
+
+export function saveQuestionSets(sets: QuestionSet[]): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(SETS_KEY, JSON.stringify(sets))
+}
+
+// ── Legacy single-list helpers (kept for backward compat) ────────────────────
 
 export function loadCustomQuestions(): CustomQuestion[] | null {
   if (typeof window === 'undefined') return null

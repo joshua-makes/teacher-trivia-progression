@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Confetti } from '@/components/ui/Confetti'
 import { loadSession, saveSession, saveLiveQuestion, clearLiveQuestion, type Team, type QuestionHistoryItem, getSeenIds, recordSeenIds } from '@/lib/session'
 import { playCorrect, playWrong, playComplete } from '@/lib/sounds'
-import { loadCustomQuestions } from '@/lib/customQuestions'
+import { loadQuestionSets } from '@/lib/customQuestions'
 import { QUESTIONS } from '@/lib/data/questions'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, getSafeZonePoints, getTimerSeconds, formatPoints } from '@/lib/ladder'
@@ -115,7 +115,7 @@ export default function QuizPage() {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
 
-  const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team', questionCount: number): QuizQuestion[] => {
+  const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team', questionCount: number, customSetId?: string): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
 
     const toQuizQ = (q: { id: string; question: string; correct: string; incorrect: string[] }, diff: Difficulty): QuizQuestion => ({
@@ -128,9 +128,11 @@ export default function QuizPage() {
 
     // ── Custom questions mode ─────────────────────────────
     if (catId === 0) {
-      const customs = loadCustomQuestions() ?? []
+      const sets = loadQuestionSets()
+      const set = sets.find(s => s.id === customSetId) ?? sets[0]
+      const customs = set?.questions ?? []
       const qs: QuizQuestion[] = customs.slice(0, questionCount).map((q, idx) => ({
-        id: `custom-${idx}`,
+        id: `custom-${q.id}`,
         question: q.question,
         answers: shuffleArray([q.correct, ...q.incorrect]),
         correctAnswer: q.correct,
@@ -203,7 +205,7 @@ export default function QuizPage() {
     setCurrentRung(1)
     setTeams(sess.teams ? [...sess.teams] : [])
     setBuzzedTeamIndex(null)
-    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel, sess.mode, sess.questionCount ?? 15)
+    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel, sess.mode, sess.questionCount ?? 15, sess.customSetId)
     setAllQuestions(qs)
     setGameState('playing')
     return () => clearTimer()
@@ -213,9 +215,11 @@ export default function QuizPage() {
   const currentRungData = LADDER[currentRung - 1]
   const timerSeconds = session?.timerSeconds ?? (session ? getTimerSeconds(session.gradeLevel) : 30)
   const buzzTimerSeconds = session?.buzzTimerSeconds ?? timerSeconds
-  const categoryName = session?.categoryId === 0
-    ? 'Custom Questions'
-    : CATEGORIES.find(c => c.id === session?.categoryId)?.name ?? ''
+  const categoryName = (() => {
+    if (session?.categoryId !== 0) return CATEGORIES.find(c => c.id === session?.categoryId)?.name ?? ''
+    const sets = loadQuestionSets()
+    return sets.find(s => s.id === session?.customSetId)?.name ?? 'Custom Questions'
+  })()
 
   const finishGame = useCallback((pts: number, winTeams: Team[], completed: boolean) => {
     const sess = loadSession()
