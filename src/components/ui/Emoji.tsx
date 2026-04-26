@@ -2,9 +2,8 @@
 
 /**
  * Renders an emoji using Google's Noto Color Emoji CDN.
- * Shows the native Unicode character immediately as a placeholder, then fades
- * in the CDN image once it loads. Falls back permanently to the native glyph
- * if the image fails.
+ * Shows the native Unicode character immediately (no layout gap while CDN loads).
+ * Falls back permanently to the native glyph if the CDN image fails.
  * License: https://github.com/googlefonts/noto-emoji/blob/main/svg/LICENSE
  */
 
@@ -31,13 +30,20 @@ export function Emoji({
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const nativeStyle = { fontSize: size * 0.75, lineHeight: 1 }
+  // Block display so mx-auto centering works (same as Next.js Image default)
+  const wrapStyle: React.CSSProperties = {
+    display: 'block',
+    width: size,
+    height: size,
+    position: 'relative',
+    flexShrink: 0,
+  }
 
   if (failed) {
     return (
       <span
         className={className}
-        style={nativeStyle}
+        style={{ ...wrapStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.8 }}
         role="img"
         aria-label={emoji}
       >
@@ -48,27 +54,34 @@ export function Emoji({
 
   return (
     <span
-      className={`relative inline-flex items-center justify-center ${className}`}
-      style={{ width: size, height: size }}
+      className={className}
+      style={wrapStyle}
       role="img"
       aria-label={emoji}
     >
-      {/* Native emoji visible immediately — hidden once CDN image loads */}
-      {!loaded && (
-        <span
-          className="absolute inset-0 flex items-center justify-center select-none"
-          aria-hidden="true"
-          style={nativeStyle}
-        >
-          {emoji}
-        </span>
-      )}
+      {/* Native emoji — visible immediately, hidden once CDN image loads */}
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: size * 0.8,
+          lineHeight: 1,
+          opacity: loaded ? 0 : 1,
+          transition: 'opacity 0.15s',
+        }}
+      >
+        {emoji}
+      </span>
       <Image
         src={emojiToCdnUrl(emoji)}
         width={size}
         height={size}
         alt=""
-        className={`transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.15s' }}
         onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}
         draggable={false}

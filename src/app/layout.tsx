@@ -16,6 +16,13 @@ export const metadata: Metadata = {
     description: 'Classroom trivia for K–12. Ladder-style, team-ready, and fun.',
     url: 'https://ladderquiz.com',
     siteName: 'Ladder Quiz',
+    images: [{ url: '/ladderquiz-logo.png', width: 1080, height: 1080, alt: 'Ladder Quiz' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Ladder Quiz',
+    description: 'Classroom trivia for K–12.',
+    images: ['/ladderquiz-logo.png'],
   },
 }
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -54,13 +55,20 @@ export default function HomePage() {
     <Container>
       <div className="max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="anim-fade-up rounded-3xl bg-gray-900 dark:bg-gray-900 border border-gray-800 dark:border-gray-700 text-center py-16 px-8 mb-10 shadow-xl relative">
+        <div className="rounded-3xl bg-gray-900 dark:bg-gray-900 border border-gray-800 dark:border-gray-700 text-center py-16 px-8 mb-10 shadow-xl relative">
           {/* Glow orb — centered behind the emoji */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
             <div className="w-80 h-80 rounded-full bg-indigo-500/30 blur-3xl" />
           </div>
           <div className="relative">
-            <Emoji emoji="🪜" size={96} className="mx-auto mb-5" />
+            <Image
+              src="/ladderquiz-logo.png"
+              alt="Ladder Quiz"
+              width={160}
+              height={160}
+              className="mx-auto mb-5 drop-shadow-2xl"
+              priority
+            />
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-3 tracking-tight relative">
             Ladder Quiz
@@ -72,7 +80,7 @@ export default function HomePage() {
 
         <div className="space-y-5">
           {/* Step 1: Grade Level */}
-          <Card className="anim-fade-up anim-d1 p-5">
+          <Card className="p-5">
             <h2 className="flex items-baseline gap-3 mb-4">
               <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">1</span>
               <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Grade Level</span>
@@ -100,7 +108,7 @@ export default function HomePage() {
           </Card>
 
           {/* Step 2: Category */}
-          <Card className="anim-fade-up anim-d2 p-5">
+          <Card className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="flex items-baseline gap-3">
                 <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">2</span>
@@ -178,7 +186,7 @@ export default function HomePage() {
           </Card>
 
           {/* Step 3: Game Mode */}
-          <Card className="anim-fade-up anim-d3 p-5">
+          <Card className="p-5">
             <h2 className="flex items-baseline gap-3 mb-4">
               <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">3</span>
               <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Game Mode</span>
@@ -242,7 +250,7 @@ export default function HomePage() {
 
           {/* Step 4: Team Setup */}
           {mode === 'team' && (
-            <Card className="anim-fade-up p-5">
+            <Card className="p-5">
               <h2 className="flex items-baseline gap-3 mb-4">
                 <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">4</span>
                 <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Team Setup</span>
@@ -289,7 +297,7 @@ export default function HomePage() {
           )}
 
           {/* Start */}
-          <div className="anim-fade-up anim-d4 flex justify-center pb-8">
+          <div className="flex justify-center pb-8">
             <Button
               variant="primary"
               size="lg"
