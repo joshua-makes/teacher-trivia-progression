@@ -406,7 +406,7 @@ export default function QuizPage() {
     return (
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="p-10 text-center max-w-sm w-full mx-auto" style={{ animation: 'scaleIn 0.2s ease both' }}>
+          <Card className="anim-scale-in p-10 text-center max-w-sm w-full mx-auto">
             {result?.correct ? (
               <>
                 <div className="text-6xl mb-4">✅</div>
@@ -441,7 +441,7 @@ export default function QuizPage() {
     return (
       <Container>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="p-10 text-center max-w-sm w-full mx-auto" style={{ animation: 'scaleIn 0.2s ease both' }}>
+          <Card className="anim-scale-in p-10 text-center max-w-sm w-full mx-auto">
             {result?.correct ? (
               <>
                 <div className="text-6xl mb-4">✅</div>

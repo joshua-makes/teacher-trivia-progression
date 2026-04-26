@@ -229,7 +229,7 @@ export default function ResultsPage() {
   return (
     <Container>
       <div className="max-w-xl mx-auto space-y-6 py-4">
-        <Card className="p-6 text-center" style={{ animation: 'scaleIn 0.35s ease both' }}>
+        <Card className="anim-scale-in p-6 text-center">
           <div className="text-6xl mb-3">{getLadderEmoji(rung, completed)}</div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             {isWinner ? '🎉 Grand Champion!' : completed ? 'Game Complete!' : 'Nice Try!'}
@@ -238,7 +238,7 @@ export default function ResultsPage() {
         </Card>
 
         {/* Score card */}
-        <Card className="p-6 text-center" style={{ animation: 'scaleIn 0.35s ease both', animationDelay: '80ms' }}>
+        <Card className="anim-scale-in anim-d1 p-6 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {isWinner ? 'Top of the ladder!' : 'Points earned'}
           </p>
