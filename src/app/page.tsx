@@ -146,13 +146,13 @@ export default function HomePage() {
                       return (
                         <div key={diff}>
                           <p className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5">
-                            {diff === 'easy' ? '\u2756 Easy' : diff === 'medium' ? '\u25c6 Medium' : '\u2605 Hard'} \u00b7 {qs.length} questions
+                            {diff === 'easy' ? '✦ Easy' : diff === 'medium' ? '◆ Medium' : '★ Hard'} · {qs.length} questions
                           </p>
                           <div className="space-y-1.5">
                             {qs.map((q, i) => (
                               <div key={q.id} className="rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 px-3 py-2">
                                 <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{i + 1}. {q.question}</p>
-                                <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">\u2713 {q.correct}</p>
+                                <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">✓ {q.correct}</p>
                               </div>
                             ))}
                           </div>
