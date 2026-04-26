@@ -660,7 +660,7 @@ export default function QuizPage() {
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-2">
               Ladder
             </p>
-            <LadderDisplay currentRung={currentRung} />
+            <LadderDisplay currentRung={currentRung} totalRungs={allQuestions.length} />
           </div>
         </div>
 

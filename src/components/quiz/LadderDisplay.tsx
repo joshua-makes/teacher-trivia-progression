@@ -1,12 +1,14 @@
 import { LADDER } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
-export function LadderDisplay({ currentRung }: { currentRung: number }) {
+export function LadderDisplay({ currentRung, totalRungs }: { currentRung: number; totalRungs: number }) {
+  const visibleLadder = LADDER.slice(0, totalRungs)
   return (
     <div className="flex flex-col gap-0.5">
-      {[...LADDER].reverse().map(rung => {
+      {[...visibleLadder].reverse().map(rung => {
         const isCurrent = rung.number === currentRung
         const isCompleted = rung.number < currentRung
+        const isTop = rung.number === totalRungs
 
         return (
           <div
@@ -26,7 +28,7 @@ export function LadderDisplay({ currentRung }: { currentRung: number }) {
             )}
           >
             <span className="shrink-0 mr-1 opacity-70">
-              {rung.number === 15
+              {isTop
                 ? '🏆'
                 : rung.isSafeZone
                   ? '🛡️'
