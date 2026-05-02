@@ -130,6 +130,8 @@ export default function HomePage() {
   }, [])
 
   const filteredCategories = CATEGORIES.filter(c => c.gradeLevels.includes(gradeLevel))
+  // Custom sets: show all (no gradeLevel) + those matching current grade
+  const filteredCustomSets = customSets.filter(s => !s.gradeLevel || s.gradeLevel === gradeLevel)
 
   // ── Derived: available question count for the current selection ──────────
   const selectedSet = categoryId === 0
@@ -348,7 +350,7 @@ export default function HomePage() {
 
             {/* Custom question sets — shown below built-in categories */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-              {customSets.length > 0 ? (
+              {filteredCustomSets.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Your Sets</span>
@@ -360,7 +362,7 @@ export default function HomePage() {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {customSets.map(set => (
+                    {filteredCustomSets.map(set => (
                       <button
                         key={set.id}
                         onClick={() => { setCategoryId(0); setSelectedSetId(set.id) }}
@@ -382,6 +384,11 @@ export default function HomePage() {
                     ))}
                   </div>
                 </>
+              ) : customSets.length > 0 ? (
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  No sets for <span className="font-semibold">{gradeLevel}</span> —{' '}
+                  <button onClick={() => router.push('/questions')} className="underline hover:text-indigo-500">manage sets →</button>
+                </p>
               ) : (
                 <button
                   onClick={() => router.push('/questions')}

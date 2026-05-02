@@ -29,6 +29,15 @@ export function Header() {
           </span>
         </Link>
         <div className="flex items-center gap-1">
+          {isLoaded && isSignedIn && (
+            <Link
+              href="/dashboard"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="View your class game history"
+            >
+              📊 Dashboard
+            </Link>
+          )}
           <Link
             href="/questions"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

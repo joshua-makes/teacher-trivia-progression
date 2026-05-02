@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -13,7 +14,9 @@ import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 import { Confetti } from '@/components/ui/Confetti'
 import { buildExportPayload, exportResultsAsJSON, exportResultsAsCSV } from '@/lib/exportResults'
+import { saveGameSession } from '@/lib/actions/sessions'
 import type { GradeLevel } from '@/lib/ladder'
+import { toast } from 'sonner'
 
 const TEAM_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   red:    { bg: 'bg-red-500',    text: 'text-white', border: 'border-red-400' },
@@ -48,6 +51,8 @@ function computeAnalytics(history: QuestionHistoryItem[]) {
 
 export default function ResultsPage() {
   const router = useRouter()
+  const { isSignedIn } = useUser()
+  const savedRef = useRef(false)
   const [mode, setMode] = useState<'solo' | 'team' | null>(null)
   const [completed, setCompleted] = useState(false)
   const [finalPoints, setFinalPoints] = useState<number | null>(null)
@@ -87,7 +92,36 @@ export default function ResultsPage() {
     setGradeLevel(session.gradeLevel ?? '3-5')
     setReplaySession(session)
 
-    // Personal best (solo only)
+    // Save to cloud history when signed in (once per mount)
+    if (isSignedIn && !savedRef.current) {
+      savedRef.current = true
+      const history = session.questionHistory ?? []
+      const correct = history.filter(h => h.correct).length
+      let catName = ''
+      let customSetName: string | null = null
+      if (session.categoryId === 0) {
+        const sets = loadQuestionSets()
+        customSetName = sets.find(s => s.id === session.customSetId)?.name ?? 'Custom Questions'
+        catName = customSetName
+      } else {
+        catName = CATEGORIES.find(c => c.id === session.categoryId)?.name ?? 'General Knowledge'
+      }
+      saveGameSession({
+        mode: session.mode,
+        gradeLevel: session.gradeLevel,
+        categoryId: session.categoryId,
+        categoryName: catName,
+        customSetName,
+        finalPoints: session.finalPoints,
+        completed: session.completed,
+        rungReached: session.currentRung ?? 1,
+        questionCount: history.length,
+        correctCount: correct,
+        accuracy: history.length > 0 ? correct / history.length : 0,
+        questionHistory: history,
+      }).then(() => toast.success('Game saved to your dashboard'))
+        .catch(() => toast.error('Could not save game to history'))
+    }
     if (session.mode === 'solo') {
       const score = session.finalPoints !== null ? session.finalPoints : getSafeZonePoints(session.currentRung ?? 1)
       const prev = getPersonalBest(session.categoryId, session.gradeLevel)
@@ -97,7 +131,7 @@ export default function ResultsPage() {
     }
 
     setLoading(false)
-  }, [router])
+  }, [router, isSignedIn])
 
   // Animate score counting up once loaded
   useEffect(() => {
@@ -180,6 +214,7 @@ export default function ResultsPage() {
         levelsReached: rung - 1, totalLevels: questionCount,
       })
       exportResultsAsJSON(payload)
+      toast.success('JSON exported')
     }
 
     function handleExportCSV() {
@@ -188,6 +223,7 @@ export default function ResultsPage() {
         levelsReached: rung - 1, totalLevels: questionCount,
       })
       exportResultsAsCSV(payload)
+      toast.success('CSV exported')
     }
 
     return (
@@ -458,6 +494,7 @@ export default function ResultsPage() {
               void navigator.clipboard.writeText(text)
               setCopied(true)
               setTimeout(() => setCopied(false), 2500)
+              toast.success('Copied to clipboard')
             }}
             className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
           >
@@ -470,6 +507,7 @@ export default function ResultsPage() {
                 finalScore: points, levelsReached, totalLevels: questionCount,
               })
               exportResultsAsCSV(payload)
+              toast.success('CSV exported')
             }}
             className="px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
           >
@@ -482,6 +520,7 @@ export default function ResultsPage() {
                 finalScore: points, levelsReached, totalLevels: questionCount,
               })
               exportResultsAsJSON(payload)
+              toast.success('JSON exported')
             }}
             className="px-4 py-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >

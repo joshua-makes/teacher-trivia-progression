@@ -16,8 +16,9 @@ import {
   type QuestionSet,
   type CustomQuestion,
 } from '@/lib/customQuestions'
-import { mergeSetsOnSignIn, upsertCloudSet, deleteCloudSet } from '@/lib/actions/sets'
+import { mergeSetsOnSignIn, upsertCloudSet, deleteCloudSet, shareSet } from '@/lib/actions/sets'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 type Difficulty = 'easy' | 'medium' | 'hard'
 
@@ -43,7 +44,6 @@ type ErrorMap = Partial<Record<keyof FormState | 'incorrect0' | 'incorrect1' | '
 export default function QuestionsPage() {
   const router = useRouter()
   const { isSignedIn, user } = useUser()
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
   const lastSyncedUserIdRef = useRef<string | null>(null)
 
   // ── Sets state ────────────────────────────────────────
@@ -55,7 +55,14 @@ export default function QuestionsPage() {
   const [showNewSet, setShowNewSet] = useState(false)
   const [newSetName, setNewSetName] = useState('')
   const [newSetEmoji, setNewSetEmoji] = useState('📝')
+  const [newSetGrade, setNewSetGrade] = useState<'all' | 'K-2' | '3-5' | '6-8' | '9-12'>('all')
   const [newSetError, setNewSetError] = useState<string | null>(null)
+
+  // Edit-set-meta panel
+  const [showSetMeta, setShowSetMeta] = useState(false)
+  const [metaName, setMetaName] = useState('')
+  const [metaEmoji, setMetaEmoji] = useState('📝')
+  const [metaGrade, setMetaGrade] = useState<'all' | 'K-2' | '3-5' | '6-8' | '9-12'>('all')
 
   // ── Question form state ───────────────────────────────
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM })
@@ -64,7 +71,6 @@ export default function QuestionsPage() {
   const [importJson, setImportJson] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
-  const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -96,15 +102,15 @@ export default function QuestionsPage() {
     if (lastSyncedUserIdRef.current === user.id) return
     lastSyncedUserIdRef.current = user.id
 
-    setSyncStatus('syncing')
     const local = loadQuestionSets()
+    const syncToastId = toast.loading('Syncing your sets…')
     mergeSetsOnSignIn(local)
       .then(merged => {
         saveQuestionSets(merged)
         setSets(merged)
-        setSyncStatus('synced')
+        toast.success('Sets synced', { id: syncToastId })
       })
-      .catch(() => setSyncStatus('error'))
+      .catch(() => toast.error('Sync failed — changes are saved locally', { id: syncToastId }))
   }, [isSignedIn, user?.id])
 
   // ── Persistence helpers ───────────────────────────────
@@ -126,6 +132,27 @@ export default function QuestionsPage() {
   }
 
   // ── Set management ────────────────────────────────────
+  function openSetMeta() {
+    if (!activeSet) return
+    setMetaName(activeSet.name)
+    setMetaEmoji(activeSet.emoji)
+    setMetaGrade((activeSet.gradeLevel ?? 'all') as 'all' | 'K-2' | '3-5' | '6-8' | '9-12')
+    setShowSetMeta(true)
+  }
+
+  function handleUpdateSetMeta() {
+    if (!activeSet || !metaName.trim()) return
+    const updated: QuestionSet = {
+      ...activeSet,
+      name: metaName.trim(),
+      emoji: metaEmoji,
+      gradeLevel: metaGrade === 'all' ? undefined : metaGrade,
+    }
+    persistSets(sets.map(s => s.id === activeSet.id ? updated : s), updated)
+    setShowSetMeta(false)
+    toast.success('Set settings saved')
+  }
+
   function handleCreateSet() {
     if (!newSetName.trim()) { setNewSetError('Give your set a name.'); return }
     const newSet: QuestionSet = {
@@ -134,20 +161,36 @@ export default function QuestionsPage() {
       emoji: newSetEmoji,
       questions: [],
       createdAt: Date.now(),
+      gradeLevel: newSetGrade === 'all' ? undefined : newSetGrade,
     }
     persistSets([...sets, newSet], newSet)
     setNewSetName('')
     setNewSetEmoji('📝')
+    setNewSetGrade('all')
     setNewSetError(null)
     setShowNewSet(false)
     setActiveSetId(newSet.id)
     setView('questions')
-  }
-
+    toast.success(`“${newSet.name}” created — add your questions below`)  }
   function handleDeleteSet(id: string) {
-    if (!confirm('Delete this set and all its questions?')) return
+    const name = sets.find(s => s.id === id)?.name ?? 'Set'
+    if (!confirm(`Delete “${name}” and all its questions?`)) return
     persistSets(sets.filter(s => s.id !== id), undefined, id)
     if (activeSetId === id) { setActiveSetId(null); setView('sets') }
+    toast.success(`“${name}” deleted`)
+  }
+
+  async function handleShare(setId: string) {
+    if (!isSignedIn) {
+      toast.error('Sign in to generate a share link')
+      return
+    }
+    const toastId = toast.loading('Generating share link…')
+    const token = await shareSet(setId)
+    if (!token) { toast.error('Could not generate share link', { id: toastId }); return }
+    const url = `${window.location.origin}/share/${token}`
+    await navigator.clipboard.writeText(url)
+    toast.success('Share link copied to clipboard!', { id: toastId })
   }
 
   function openSet(id: string) {
@@ -208,8 +251,7 @@ export default function QuestionsPage() {
     persistActiveQuestions(nextQs)
     setForm({ ...EMPTY_FORM })
     setErrors({})
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    toast.success(editingId ? 'Question updated' : 'Question added')
   }
 
   function handleEdit(q: CustomQuestion) {
@@ -251,11 +293,13 @@ export default function QuestionsPage() {
   function handleImport() {
     if (!activeSet) return
     const result = parseCustomQuestionsJSON(importJson)
-    if ('error' in result) { setImportError(result.error); return }
+    if ('error' in result) { toast.error(result.error); setImportError(result.error); return }
+    const count = result.questions.length
     persistActiveQuestions([...activeSet.questions, ...result.questions])
     setImportJson('')
     setImportError(null)
     setShowImport(false)
+    toast.success(`${count} question${count !== 1 ? 's' : ''} imported`)
   }
 
   function handleMoveUp(idx: number) {
@@ -320,15 +364,10 @@ Rules:
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Question Sets</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {sets.length} set{sets.length !== 1 ? 's' : ''} ·{' '}
-                {isSignedIn
-                  ? syncStatus === 'syncing' ? '☁️ Syncing…'
-                    : syncStatus === 'synced'  ? '☁️ Synced to cloud'
-                    : syncStatus === 'error'   ? '⚠️ Sync failed'
-                    : '☁️ Cloud sync on'
-                  : 'saved to this browser · Sign in to sync'}
+                {isSignedIn ? '☁️ Cloud sync on' : 'Saved to this browser · Sign in to sync'}
               </p>
             </div>
-            <Button variant="primary" size="sm" onClick={() => { setShowNewSet(p => !p); setNewSetName(''); setNewSetError(null) }}>
+            <Button variant="primary" size="sm" onClick={() => { setShowNewSet(p => !p); setNewSetName(''); setNewSetGrade('all'); setNewSetError(null) }}>
               + New Set
             </Button>
           </div>
@@ -373,8 +412,33 @@ Rules:
                   ))}
                 </div>
               </div>
+              <div className="mb-5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Grade Level
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(['all', 'K-2', '3-5', '6-8', '9-12'] as const).map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setNewSetGrade(g)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-lg border-2 text-xs font-semibold transition-all',
+                        newSetGrade === g
+                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-300',
+                      )}
+                    >
+                      {g === 'all' ? 'All grades' : `Grade ${g}`}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                  {newSetGrade === 'all' ? 'Visible for every grade level.' : `Only shown when Grade ${newSetGrade} is selected on the home page.`}
+                </p>
+              </div>
               <div className="flex gap-2">
-                <Button variant="primary" size="sm" onClick={handleCreateSet}>Create & Add Questions</Button>
+                <Button variant="primary" size="sm" onClick={handleCreateSet}>Create &amp; Add Questions</Button>
                 <Button variant="secondary" size="sm" onClick={() => setShowNewSet(false)}>Cancel</Button>
               </div>
             </Card>
@@ -399,6 +463,11 @@ Rules:
                       <p className="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight truncate">{set.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {set.questions.length} question{set.questions.length !== 1 ? 's' : ''}
+                        {set.gradeLevel && (
+                          <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+                            {set.gradeLevel}
+                          </span>
+                        )}
                       </p>
                       <div className="flex gap-2 mt-3 flex-wrap">
                         <button
@@ -414,6 +483,18 @@ Rules:
                         >
                           🚀 Play
                         </button>
+                        {isSignedIn && (
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => handleShare(set.id)}
+                              disabled={set.questions.length === 0}
+                              title="Generate a public link — anyone with it can add this set to their own collection"
+                              className="text-xs px-2.5 py-1 rounded-lg border border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
+                            >
+                              🔗 Share
+                            </button>
+                          </div>
+                        )}
                         <button
                           onClick={() => handleDeleteSet(set.id)}
                           className="text-xs px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-900 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors font-medium ml-auto"
@@ -460,6 +541,11 @@ Rules:
             )}
           </div>
           <div className="flex gap-2 shrink-0">
+            {activeSet && (
+              <Button variant="secondary" size="sm" onClick={() => showSetMeta ? setShowSetMeta(false) : openSetMeta()}>
+                ⚙ Settings
+              </Button>
+            )}
             {activeSet && activeSet.questions.length > 0 && (
               <>
                 <Button variant="secondary" size="sm" onClick={() => exportCustomQuestionsAsFile(activeSet.questions)}>
@@ -472,6 +558,55 @@ Rules:
             )}
           </div>
         </div>
+
+        {/* Set settings panel */}
+        {showSetMeta && activeSet && (
+          <Card className="p-5 border-indigo-200 dark:border-indigo-800">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Set Settings</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Name</label>
+              <input
+                type="text"
+                value={metaName}
+                onChange={e => setMetaName(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Emoji</label>
+              <div className="flex flex-wrap gap-2">
+                {['📝','🧠','🔬','📐','🌍','📚','🎭','🏆','⭐','🎯','🔢','🌱'].map(e => (
+                  <button key={e} type="button" onClick={() => setMetaEmoji(e)}
+                    className={cn('w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all',
+                      metaEmoji === e ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 scale-110' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                    )}>{e}</button>
+                ))}
+              </div>
+            </div>
+            <div className="mb-5">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Grade Level</label>
+              <div className="flex flex-wrap gap-2">
+                {(['all', 'K-2', '3-5', '6-8', '9-12'] as const).map(g => (
+                  <button key={g} type="button" onClick={() => setMetaGrade(g)}
+                    className={cn('px-3 py-1.5 rounded-lg border-2 text-xs font-semibold transition-all',
+                      metaGrade === g
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-300',
+                    )}>
+                    {g === 'all' ? 'All grades' : `Grade ${g}`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                {metaGrade === 'all' ? 'Visible for every grade level.' : `Only shown when Grade ${metaGrade} is selected on the home page.`}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={handleUpdateSetMeta}>Save</Button>
+              <Button variant="secondary" size="sm" onClick={() => setShowSetMeta(false)}>Cancel</Button>
+            </div>
+          </Card>
+        )}
 
         {/* Add / Edit form */}
         <div ref={formRef}>
@@ -607,9 +742,6 @@ Rules:
               </Button>
               {editingId && (
                 <Button variant="secondary" size="sm" onClick={handleCancelEdit}>Cancel</Button>
-              )}
-              {saved && (
-                <span className="self-center text-sm text-emerald-600 dark:text-emerald-400 font-medium">✓ Saved!</span>
               )}
             </div>
           </Card>

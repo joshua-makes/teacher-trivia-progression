@@ -1,4 +1,5 @@
 import type { Difficulty } from '@/lib/data/questions'
+import type { GradeLevel } from '@/lib/data/grades'
 
 export type CustomQuestion = {
   id: string
@@ -15,6 +16,7 @@ export type QuestionSet = {
   emoji: string
   questions: CustomQuestion[]
   createdAt: number
+  gradeLevel?: GradeLevel   // undefined = works for all grades
 }
 
 /** Generates a short random ID for a question */

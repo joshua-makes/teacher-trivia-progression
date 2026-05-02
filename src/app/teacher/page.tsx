@@ -39,7 +39,7 @@ export default function TeacherPage() {
       <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-widest border border-amber-400 dark:border-amber-700">
-            👁 Teacher View
+            👨‍🏫 Teacher View
           </span>
           <span className="text-xs text-gray-500">Auto-updates as questions change</span>
         </div>
