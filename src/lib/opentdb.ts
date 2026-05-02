@@ -22,7 +22,12 @@ export async function fetchQuestions(
     if (!res.ok) return null
     const data: OpenTDBResponse = await res.json()
     if (data.response_code !== 0) return null
-    return data.results
+    return data.results.map(q => ({
+      ...q,
+      question: decodeHtmlEntities(q.question),
+      correct_answer: decodeHtmlEntities(q.correct_answer),
+      incorrect_answers: q.incorrect_answers.map(decodeHtmlEntities),
+    }))
   } catch {
     return null
   }
@@ -30,10 +35,11 @@ export async function fetchQuestions(
 
 export function decodeHtmlEntities(str: string): string {
   return str
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
     .replace(/&ldquo;/g, '\u201C')
     .replace(/&rdquo;/g, '\u201D')
     .replace(/&lsquo;/g, '\u2018')

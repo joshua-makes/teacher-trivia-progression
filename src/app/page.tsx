@@ -15,6 +15,24 @@ import { cn } from '@/lib/utils'
 import { Emoji } from '@/components/ui/Emoji'
 import { loadSettings } from '@/lib/settings'
 
+/**
+ * Returns the set of question-count buttons to show for a given pool size.
+ * Always includes multiples of 5 that fit (5, 10, 15), plus the exact pool
+ * size when it's not already one of those steps and is below 15.
+ *   pool=3  → [3]
+ *   pool=7  → [5, 7]
+ *   pool=12 → [5, 10, 12]
+ *   pool=15 → [5, 10, 15]
+ *   pool=20 → [5, 10, 15]
+ */
+function getQuestionCountOptions(pool: number): number[] {
+  const steps = [5, 10, 15, 20, 25, 30]
+  const opts = steps.filter(n => n <= pool)
+  if (pool < 15 && !steps.includes(pool)) opts.push(pool)
+  opts.sort((a, b) => a - b)
+  return opts.length > 0 ? opts : [Math.min(pool, 15)]
+}
+
 const ALL_TEAM_COLORS = [
   'red', 'orange', 'amber', 'green', 'teal',
   'blue', 'indigo', 'purple', 'violet', 'pink', 'rose',
@@ -97,7 +115,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const sess = loadSession()
-    if (sess && !sess.completed) {
+    if (sess && !sess.gameOver) {
       setResumableSession(sess)
     }
     const sets = loadQuestionSets()
@@ -112,6 +130,25 @@ export default function HomePage() {
   }, [])
 
   const filteredCategories = CATEGORIES.filter(c => c.gradeLevels.includes(gradeLevel))
+
+  // ── Derived: available question count for the current selection ──────────
+  const selectedSet = categoryId === 0
+    ? (customSets.find(s => s.id === selectedSetId) ?? null)
+    : null
+  const availableCount = selectedSet
+    ? selectedSet.questions.length
+    : (categoryId !== null && categoryId !== 0)
+      ? QUESTIONS.filter(q => q.category === categoryId && q.grades.includes(gradeLevel)).length
+      : 15
+  const questionCountOptions = getQuestionCountOptions(Math.max(1, availableCount))
+
+  // Snap questionCount to a valid option whenever the available pool changes
+  useEffect(() => {
+    if (!questionCountOptions.includes(questionCount)) {
+      setQuestionCount(questionCountOptions[questionCountOptions.length - 1]!)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableCount])
 
   function handleStart() {
     if (categoryId === null) return
@@ -400,13 +437,13 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
               <span className="text-sm text-gray-600 dark:text-gray-400 shrink-0">Questions per game:</span>
-              <div className="flex gap-2">
-                {[5, 10, 15].map(n => (
+              <div className="flex gap-2 flex-wrap">
+                {questionCountOptions.map(n => (
                   <button
                     key={n}
                     onClick={() => setQuestionCount(n)}
                     className={cn(
-                      'w-10 h-9 rounded-lg border-2 font-bold text-sm transition-all',
+                      'min-w-[2.5rem] px-2 h-9 rounded-lg border-2 font-bold text-sm transition-all',
                       questionCount === n
                         ? 'border-indigo-500 bg-indigo-500 text-white'
                         : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400',
@@ -416,6 +453,11 @@ export default function HomePage() {
                   </button>
                 ))}
               </div>
+              {selectedSet && availableCount < 15 && (
+                <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                  ({availableCount} in set)
+                </span>
+              )}
             </div>
 
             {/* Timer sliders — collapsed by default */}

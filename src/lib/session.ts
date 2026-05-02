@@ -39,6 +39,7 @@ export type QuizSession = {
   buzzTimerSeconds: number | null   // null = fall back to timerSeconds (team mode only)
   customSetId?: string              // which question set to play (categoryId === 0 only)
   adaptiveDifficulty?: boolean      // dynamically adjust difficulty based on performance
+  gameOver?: boolean                // true once finishGame has been called (never resume)
 }
 
 const SESSION_KEY = 'trivia_session'

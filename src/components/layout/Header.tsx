@@ -1,10 +1,14 @@
-﻿import Link from 'next/link'
+﻿'use client'
+
+import Link from 'next/link'
 import Image from 'next/image'
+import { useUser, UserButton, SignInButton } from '@clerk/nextjs'
 import { ThemeToggle } from './ThemeToggle'
 import { FullscreenButton } from './FullscreenButton'
 import { SettingsButton } from './SettingsButton'
 
 export function Header() {
+  const { isLoaded, isSignedIn } = useUser()
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200/80 dark:border-gray-800 backdrop-blur-md bg-white/90 dark:bg-gray-950/90 shadow-sm dark:shadow-none">
         <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between">
@@ -44,6 +48,15 @@ export function Header() {
           <FullscreenButton />
           <SettingsButton />
           <ThemeToggle />
+          {isLoaded && (isSignedIn ? (
+            <UserButton />
+          ) : (
+            <SignInButton mode="modal">
+              <button className="ml-1 px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                Sign in
+              </button>
+            </SignInButton>
+          ))}
         </div>
       </div>
     </header>

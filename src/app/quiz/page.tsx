@@ -16,7 +16,7 @@ import { playCorrect, playWrong, playComplete } from '@/lib/sounds'
 import { loadQuestionSets } from '@/lib/customQuestions'
 import { QUESTIONS } from '@/lib/data/questions'
 import { CATEGORIES } from '@/lib/data/categories'
-import { LADDER, getSafeZonePoints, getTimerSeconds, formatPoints } from '@/lib/ladder'
+import { buildLadder, getSafeZonePoints, getTimerSeconds, formatPoints, type Rung } from '@/lib/ladder'
 import { shuffleArray } from '@/lib/shuffle'
 import { loadSettings } from '@/lib/settings'
 import { nextDifficulty } from '@/lib/progression'
@@ -171,6 +171,7 @@ export default function QuizPage() {
   const soloLastResultRef = useRef<{ correct: boolean; correctAnswer: string } | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const buzzFlashRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ladderRef = useRef<Rung[]>(buildLadder(15))
   const questionHistoryRef = useRef<QuestionHistoryItem[]>([])
   const [buzzFlashTeam, setBuzzFlashTeam] = useState<Team | null>(null)
   // Lifelines (solo mode)
@@ -297,7 +298,7 @@ export default function QuizPage() {
     const sess = loadSession()
     if (!sess) { router.push('/'); return }
     setSession(sess)
-    setCurrentRung(1)
+    setCurrentRung(sess.currentRung ?? 1)
     setTeams(sess.teams ? [...sess.teams] : [])
     setBuzzedTeamIndex(null)
     if (sess.adaptiveDifficulty) {
@@ -325,7 +326,9 @@ export default function QuizPage() {
   const totalQCount = session?.adaptiveDifficulty
     ? (session?.questionCount ?? 15)
     : allQuestions.length
-  const currentRungData = LADDER[currentRung - 1]
+  const ladder = buildLadder(Math.max(1, totalQCount))
+  ladderRef.current = ladder
+  const currentRungData = ladder[currentRung - 1]
   const timerSeconds = session?.timerSeconds ?? (session ? getTimerSeconds(session.gradeLevel) : 30)
   const buzzTimerSeconds = session?.buzzTimerSeconds ?? timerSeconds
   const categoryName = (() => {
@@ -338,6 +341,7 @@ export default function QuizPage() {
     const sess = loadSession()
     if (sess) {
       sess.completed = completed
+      sess.gameOver = true
       sess.currentRung = currentRung
       sess.finalPoints = session?.mode === 'solo' ? pts : null
       sess.teams = winTeams.length > 0 ? winTeams : sess.teams
@@ -391,7 +395,7 @@ export default function QuizPage() {
         } else {
           playWrong()
           timerRef.current = setTimeout(() => {
-            finishGame(getSafeZonePoints(currentRung), [], false)
+            finishGame(getSafeZonePoints(currentRung, ladderRef.current), [], false)
           }, 2500)
         }
       } else {
@@ -488,7 +492,7 @@ export default function QuizPage() {
   const handleWalkAway = useCallback(() => {
     if (!session || session.mode !== 'solo') return
     clearTimer()
-    finishGame(getSafeZonePoints(currentRung), [], false)
+    finishGame(getSafeZonePoints(currentRung, ladderRef.current), [], false)
   }, [session, currentRung, finishGame])
 
   const handleFiftyFifty = useCallback(() => {
@@ -508,7 +512,7 @@ export default function QuizPage() {
     timerRef.current = setTimeout(() => {
       const qCount = session?.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
       if (currentRung >= qCount) {
-        finishGame(getSafeZonePoints(currentRung), [], false)
+        finishGame(getSafeZonePoints(currentRung, ladderRef.current), [], false)
       } else {
         if (session?.adaptiveDifficulty) queueNextAdaptive(false)
         setCurrentRung(r => r + 1)
@@ -744,7 +748,7 @@ export default function QuizPage() {
   }
 
   // ── Shared derived values ─────────────────────────────
-  const safeZonePts = getSafeZonePoints(currentRung)
+  const safeZonePts = getSafeZonePoints(currentRung, ladder)
   const stealAvailable = triedTeamIndices.length > 0 && buzzedTeamIndex === null
 
   // ── TEAM MODE LAYOUT ──────────────────────────────────

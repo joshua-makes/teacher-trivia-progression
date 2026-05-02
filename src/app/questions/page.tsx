@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +16,7 @@ import {
   type QuestionSet,
   type CustomQuestion,
 } from '@/lib/customQuestions'
+import { mergeSetsOnSignIn, upsertCloudSet, deleteCloudSet } from '@/lib/actions/sets'
 import { cn } from '@/lib/utils'
 
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -40,6 +42,9 @@ type ErrorMap = Partial<Record<keyof FormState | 'incorrect0' | 'incorrect1' | '
 
 export default function QuestionsPage() {
   const router = useRouter()
+  const { isSignedIn, user } = useUser()
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle')
+  const lastSyncedUserIdRef = useRef<string | null>(null)
 
   // ── Sets state ────────────────────────────────────────
   const [sets, setSets] = useState<QuestionSet[]>([])
@@ -85,15 +90,39 @@ export default function QuestionsPage() {
     }
   }, [])
 
+  // Sync with cloud when user signs in (run once per user session)
+  useEffect(() => {
+    if (!isSignedIn || !user?.id) return
+    if (lastSyncedUserIdRef.current === user.id) return
+    lastSyncedUserIdRef.current = user.id
+
+    setSyncStatus('syncing')
+    const local = loadQuestionSets()
+    mergeSetsOnSignIn(local)
+      .then(merged => {
+        saveQuestionSets(merged)
+        setSets(merged)
+        setSyncStatus('synced')
+      })
+      .catch(() => setSyncStatus('error'))
+  }, [isSignedIn, user?.id])
+
   // ── Persistence helpers ───────────────────────────────
-  function persistSets(next: QuestionSet[]) {
+  function persistSets(next: QuestionSet[], changedSet?: QuestionSet, deletedSetId?: string) {
     saveQuestionSets(next)
     setSets(next)
+    if (isSignedIn) {
+      if (changedSet) upsertCloudSet(changedSet).catch(() => {})
+      if (deletedSetId) deleteCloudSet(deletedSetId).catch(() => {})
+    }
   }
 
   function persistActiveQuestions(questions: CustomQuestion[]) {
     if (!activeSetId) return
-    persistSets(sets.map(s => s.id === activeSetId ? { ...s, questions } : s))
+    const updatedSet = sets.find(s => s.id === activeSetId)
+    if (!updatedSet) return
+    const next = { ...updatedSet, questions }
+    persistSets(sets.map(s => s.id === activeSetId ? next : s), next)
   }
 
   // ── Set management ────────────────────────────────────
@@ -106,7 +135,7 @@ export default function QuestionsPage() {
       questions: [],
       createdAt: Date.now(),
     }
-    persistSets([...sets, newSet])
+    persistSets([...sets, newSet], newSet)
     setNewSetName('')
     setNewSetEmoji('📝')
     setNewSetError(null)
@@ -117,7 +146,7 @@ export default function QuestionsPage() {
 
   function handleDeleteSet(id: string) {
     if (!confirm('Delete this set and all its questions?')) return
-    persistSets(sets.filter(s => s.id !== id))
+    persistSets(sets.filter(s => s.id !== id), undefined, id)
     if (activeSetId === id) { setActiveSetId(null); setView('sets') }
   }
 
@@ -290,7 +319,13 @@ Rules:
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Question Sets</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                {sets.length} set{sets.length !== 1 ? 's' : ''} · saved to this browser
+                {sets.length} set{sets.length !== 1 ? 's' : ''} ·{' '}
+                {isSignedIn
+                  ? syncStatus === 'syncing' ? '☁️ Syncing…'
+                    : syncStatus === 'synced'  ? '☁️ Synced to cloud'
+                    : syncStatus === 'error'   ? '⚠️ Sync failed'
+                    : '☁️ Cloud sync on'
+                  : 'saved to this browser · Sign in to sync'}
               </p>
             </div>
             <Button variant="primary" size="sm" onClick={() => { setShowNewSet(p => !p); setNewSetName(''); setNewSetError(null) }}>

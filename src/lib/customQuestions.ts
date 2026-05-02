@@ -1,5 +1,4 @@
 import type { Difficulty } from '@/lib/data/questions'
-import { escapeHtml } from '@/lib/utils'
 
 export type CustomQuestion = {
   id: string
@@ -149,9 +148,9 @@ export function parseCustomQuestionsJSON(
 
     questions.push({
       id: typeof q.id === 'string' && q.id ? q.id : makeId(),
-      question: escapeHtml((q.question as string).trim()),
-      correct: escapeHtml((q.correct as string).trim()),
-      incorrect: (q.incorrect as string[]).map(a => escapeHtml(a.trim())) as [string, string, string],
+      question: (q.question as string).trim(),
+      correct: (q.correct as string).trim(),
+      incorrect: (q.incorrect as string[]).map(a => a.trim()) as [string, string, string],
       difficulty: q.difficulty as Difficulty | undefined,
       imageUrl: typeof q.imageUrl === 'string' && q.imageUrl.trim() ? q.imageUrl.trim() : undefined,
     })

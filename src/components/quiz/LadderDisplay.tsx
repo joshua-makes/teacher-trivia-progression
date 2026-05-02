@@ -1,8 +1,8 @@
-import { LADDER } from '@/lib/ladder'
+import { buildLadder } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 
 export function LadderDisplay({ currentRung, totalRungs }: { currentRung: number; totalRungs: number }) {
-  const visibleLadder = LADDER.slice(0, totalRungs)
+  const visibleLadder = buildLadder(totalRungs)
   return (
     <div className="flex flex-col gap-0.5">
       {[...visibleLadder].reverse().map(rung => {

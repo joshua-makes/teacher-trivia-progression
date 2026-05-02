@@ -35,8 +35,8 @@ export const LADDER: Rung[] = [
   { number: 15, points: 1_000_000, difficulty: 'hard',   isSafeZone: false, label: '1,000,000' },
 ]
 
-export function getSafeZonePoints(rung: number): number {
-  const safeZones = LADDER.filter(r => r.isSafeZone && r.number < rung)
+export function getSafeZonePoints(rung: number, ladder: Rung[] = LADDER): number {
+  const safeZones = ladder.filter(r => r.isSafeZone && r.number < rung)
   if (safeZones.length === 0) return 0
   return safeZones[safeZones.length - 1].points
 }
@@ -47,6 +47,35 @@ export function getRung(number: number): Rung | undefined {
 
 export function formatPoints(pts: number): string {
   return pts.toLocaleString()
+}
+
+/** Rounds a raw point value to a clean display number */
+function snapPoints(n: number): number {
+  if (n >= 500_000) return Math.round(n / 50_000) * 50_000
+  if (n >= 100_000) return Math.round(n / 10_000) * 10_000
+  if (n >= 10_000)  return Math.round(n / 1_000) * 1_000
+  if (n >= 1_000)   return Math.round(n / 500) * 500
+  return Math.max(100, Math.round(n / 100) * 100)
+}
+
+/**
+ * Generates a scaled ladder of `n` rungs.
+ * - Easy: first third, Medium: second third, Hard: final third
+ * - Safe zones at the end of each of the first two thirds
+ * - Points scale geometrically from 100 to 1,000,000
+ */
+export function buildLadder(n: number): Rung[] {
+  if (n <= 0) return []
+  const e = Math.max(1, Math.floor(n / 3))           // last easy rung index
+  const m = Math.max(e + 1, Math.floor(2 * n / 3))  // last medium rung index
+  return Array.from({ length: n }, (_, i) => {
+    const rungNum = i + 1
+    const diff: Difficulty = rungNum <= e ? 'easy' : rungNum <= m ? 'medium' : 'hard'
+    const isSafeZone = rungNum === e || rungNum === m
+    const raw = n === 1 ? 1_000_000 : 100 * Math.pow(10_000, i / (n - 1))
+    const pts = rungNum === n ? 1_000_000 : snapPoints(raw)
+    return { number: rungNum, points: pts, difficulty: diff, isSafeZone, label: formatPoints(pts) }
+  })
 }
 
 export function getTimerSeconds(gradeLevel: GradeLevel): number {

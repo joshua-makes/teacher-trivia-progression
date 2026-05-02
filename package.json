@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "cross-env NODE_OPTIONS=--max-http-header-size=32768 next dev",
+    "build": "cross-env NODE_OPTIONS=--max-http-header-size=32768 next build",
+    "start": "cross-env NODE_OPTIONS=--max-http-header-size=32768 next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
@@ -14,6 +14,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.3.0",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -27,6 +30,8 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "cross-env": "^10.1.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.0.0",
     "jsdom": "^25.0.0",
