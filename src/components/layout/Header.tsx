@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import { ThemeToggle } from './ThemeToggle'
 import { FullscreenButton } from './FullscreenButton'
+import { SettingsButton } from './SettingsButton'
 
 export function Header() {
   return (
@@ -41,6 +42,7 @@ export function Header() {
             👁 Teacher
           </Link>
           <FullscreenButton />
+          <SettingsButton />
           <ThemeToggle />
         </div>
       </div>

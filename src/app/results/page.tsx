@@ -11,6 +11,9 @@ import { CATEGORIES } from '@/lib/data/categories'
 import { loadQuestionSets } from '@/lib/customQuestions'
 import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
+import { Confetti } from '@/components/ui/Confetti'
+import { buildExportPayload, exportResultsAsJSON, exportResultsAsCSV } from '@/lib/exportResults'
+import type { GradeLevel } from '@/lib/ladder'
 
 const TEAM_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   red:    { bg: 'bg-red-500',    text: 'text-white', border: 'border-red-400' },
@@ -33,6 +36,16 @@ function getLadderEmoji(rung: number, completed: boolean): string {
   return '📚'
 }
 
+function computeAnalytics(history: QuestionHistoryItem[]) {
+  const total = history.length
+  const correct = history.filter(h => h.correct).length
+  const timed = history.filter(h => h.timeTakenMs !== undefined && h.timeTakenMs > 0)
+  const avgTimeMs = timed.length > 0
+    ? timed.reduce((sum, h) => sum + (h.timeTakenMs ?? 0), 0) / timed.length
+    : null
+  return { total, correct, accuracy: total > 0 ? correct / total : 0, avgTimeMs }
+}
+
 export default function ResultsPage() {
   const router = useRouter()
   const [mode, setMode] = useState<'solo' | 'team' | null>(null)
@@ -41,6 +54,7 @@ export default function ResultsPage() {
   const [rung, setRung] = useState(1)
   const [teams, setTeams] = useState<Team[]>([])
   const [categoryName, setCategoryName] = useState('')
+  const [gradeLevel, setGradeLevel] = useState<GradeLevel>('3-5')
   const [loading, setLoading] = useState(true)
   const [questionHistory, setQuestionHistory] = useState<QuestionHistoryItem[]>([])
   const [copied, setCopied] = useState(false)
@@ -70,6 +84,7 @@ export default function ResultsPage() {
     }
     setQuestionHistory(session.questionHistory ?? [])
     setQuestionCount(session.questionCount ?? 15)
+    setGradeLevel(session.gradeLevel ?? '3-5')
     setReplaySession(session)
 
     // Personal best (solo only)
@@ -137,6 +152,7 @@ export default function ResultsPage() {
     const sorted = [...teams].sort((a, b) => b.score - a.score)
     const winner = sorted[0]
     const maxScore = winner?.score ?? 1
+    const analytics = computeAnalytics(questionHistory)
 
     function handleCopyTeam() {
       const scoreLines = sorted
@@ -158,8 +174,25 @@ export default function ResultsPage() {
       setTimeout(() => setCopied(false), 2500)
     }
 
+    function handleExportJSON() {
+      const payload = buildExportPayload(questionHistory, {
+        categoryName, gradeLevel, mode: 'team', teams: sorted,
+        levelsReached: rung - 1, totalLevels: questionCount,
+      })
+      exportResultsAsJSON(payload)
+    }
+
+    function handleExportCSV() {
+      const payload = buildExportPayload(questionHistory, {
+        categoryName, gradeLevel, mode: 'team', teams: sorted,
+        levelsReached: rung - 1, totalLevels: questionCount,
+      })
+      exportResultsAsCSV(payload)
+    }
+
     return (
       <Container>
+        {completed && <Confetti />}
         <div className="max-w-2xl mx-auto space-y-6 py-4">
           <Card className="p-6 text-center">
             <div className="text-5xl mb-3">🏅</div>
@@ -206,6 +239,30 @@ export default function ResultsPage() {
             </div>
           </Card>
 
+          {/* Analytics */}
+          {analytics.total > 0 && (
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Game Stats</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                    {Math.round(analytics.accuracy * 100)}%
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Accuracy</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{analytics.correct}/{analytics.total} correct</p>
+                </div>
+                {analytics.avgTimeMs !== null && (
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                      {(analytics.avgTimeMs / 1000).toFixed(1)}s
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Avg Response Time</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
           {/* Question Recap */}
           {questionHistory.length > 0 && (
             <Card className="p-5">
@@ -242,12 +299,24 @@ export default function ResultsPage() {
             </Card>
           )}
 
-          <div className="flex gap-2 justify-center print:hidden">
+          <div className="flex flex-wrap gap-2 justify-center print:hidden">
             <button
               onClick={handleCopyTeam}
               className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
             >
-              {copied ? '✓ Copied!' : '📋 Copy results'}
+              {copied ? '✓ Copied!' : '📋 Copy'}
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className="px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+            >
+              ⬇️ CSV
+            </button>
+            <button
+              onClick={handleExportJSON}
+              className="px-4 py-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              ⬇️ JSON
             </button>
             <button
               onClick={() => window.print()}
@@ -272,9 +341,11 @@ export default function ResultsPage() {
   const isWinner = completed
   const rungData = LADDER[rung - 1]
   const levelsReached = completed ? questionCount : rung - 1
+  const soloAnalytics = computeAnalytics(questionHistory)
 
   return (
     <Container>
+      {completed && <Confetti />}
       <div className="max-w-xl mx-auto space-y-6 py-4">
         <Card className="anim-scale-in p-6 text-center">
           <div className="text-6xl mb-3">{getLadderEmoji(rung, completed)}</div>
@@ -344,7 +415,31 @@ export default function ResultsPage() {
           </div>
         </Card>
 
-        <div className="flex gap-2 justify-center print:hidden">
+        {/* Analytics */}
+        {soloAnalytics.total > 0 && (
+          <Card className="p-5">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Game Stats</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                  {Math.round(soloAnalytics.accuracy * 100)}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Accuracy</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{soloAnalytics.correct}/{soloAnalytics.total} correct</p>
+              </div>
+              {soloAnalytics.avgTimeMs !== null && (
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                    {(soloAnalytics.avgTimeMs / 1000).toFixed(1)}s
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Avg Response Time</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
+        <div className="flex flex-wrap gap-2 justify-center print:hidden">
           <button
             onClick={() => {
               const recap = questionHistory.length > 0
@@ -366,7 +461,31 @@ export default function ResultsPage() {
             }}
             className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
           >
-            {copied ? '✓ Copied!' : '📋 Copy results'}
+            {copied ? '✓ Copied!' : '📋 Copy'}
+          </button>
+          <button
+            onClick={() => {
+              const payload = buildExportPayload(questionHistory, {
+                categoryName, gradeLevel, mode: 'solo',
+                finalScore: points, levelsReached, totalLevels: questionCount,
+              })
+              exportResultsAsCSV(payload)
+            }}
+            className="px-4 py-2 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+          >
+            ⬇️ CSV
+          </button>
+          <button
+            onClick={() => {
+              const payload = buildExportPayload(questionHistory, {
+                categoryName, gradeLevel, mode: 'solo',
+                finalScore: points, levelsReached, totalLevels: questionCount,
+              })
+              exportResultsAsJSON(payload)
+            }}
+            className="px-4 py-2 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            ⬇️ JSON
           </button>
           <button
             onClick={() => window.print()}

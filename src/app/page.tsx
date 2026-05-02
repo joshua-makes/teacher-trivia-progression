@@ -13,6 +13,7 @@ import { clearSession, createSession, loadSession, saveSession, type QuizSession
 import { loadQuestionSets, type QuestionSet } from '@/lib/customQuestions'
 import { cn } from '@/lib/utils'
 import { Emoji } from '@/components/ui/Emoji'
+import { loadSettings } from '@/lib/settings'
 
 const ALL_TEAM_COLORS = [
   'red', 'orange', 'amber', 'green', 'teal',
@@ -62,16 +63,34 @@ export default function HomePage() {
   const [questionCount, setQuestionCount] = useState(15)
   const [showPreview, setShowPreview] = useState(false)
   const [resumableSession, setResumableSession] = useState<QuizSession | null>(null)
-  const [timerSeconds, setTimerSeconds] = useState(() => getTimerSeconds('3-5'))
-  const [buzzTimerSeconds, setBuzzTimerSeconds] = useState(() => getTimerSeconds('3-5'))
+  const [timerSeconds, setTimerSeconds] = useState(() => {
+    const settings = loadSettings()
+    return settings.timerOverrides['3-5'] ?? getTimerSeconds('3-5')
+  })
+  const [buzzTimerSeconds, setBuzzTimerSeconds] = useState(() => {
+    const settings = loadSettings()
+    return settings.timerOverrides['3-5'] ?? getTimerSeconds('3-5')
+  })
   const [teamColors, setTeamColors] = useState<TeamColor[]>([...DEFAULT_TEAM_COLORS])
   // Custom question sets
   const [customSets, setCustomSets] = useState<QuestionSet[]>([])
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null)
+  const [showTimers, setShowTimers] = useState(false)
 
-  // Reset timer defaults whenever grade level changes
+  // Read adaptive difficulty from persistent settings (configured via ⚙️ modal)
+  const adaptiveDifficulty = (() => {
+    if (typeof window === 'undefined') return false
+    try {
+      const raw = localStorage.getItem('trivia_settings')
+      if (!raw) return false
+      return (JSON.parse(raw) as { adaptiveDifficulty?: boolean }).adaptiveDifficulty ?? false
+    } catch { return false }
+  })()
+
+  // Reset timer defaults whenever grade level changes (respect settings override)
   useEffect(() => {
-    const def = getTimerSeconds(gradeLevel)
+    const settings = loadSettings()
+    const def = settings.timerOverrides[gradeLevel] ?? getTimerSeconds(gradeLevel)
     setTimerSeconds(def)
     setBuzzTimerSeconds(def)
   }, [gradeLevel])
@@ -116,6 +135,7 @@ export default function HomePage() {
       timerSeconds,
       mode === 'team' ? buzzTimerSeconds : null,
       categoryId === 0 ? (selectedSetId ?? undefined) : undefined,
+      adaptiveDifficulty,
     )
     saveSession(session)
     router.push('/quiz')
@@ -398,46 +418,62 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Timer sliders */}
-            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Timers</p>
-              {mode === 'solo' ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Answer time</span>
-                  <input
-                    type="range" min={5} max={60} step={5}
-                    value={timerSeconds}
-                    onChange={e => setTimerSeconds(Number(e.target.value))}
-                    className="flex-1 accent-indigo-500"
-                    aria-label="Answer time in seconds"
-                  />
-                  <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
+            {/* Timer sliders — collapsed by default */}
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => setShowTimers(p => !p)}
+                className="flex items-center justify-between w-full text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <span className="font-bold uppercase tracking-widest">Timers</span>
+                <span className="tabular-nums font-medium">
+                  {mode === 'solo'
+                    ? `${timerSeconds}s`
+                    : `read ${timerSeconds}s · buzz ${buzzTimerSeconds}s`}
+                  <span className="ml-1">{showTimers ? '▴' : '▾'}</span>
+                </span>
+              </button>
+              {showTimers && (
+                <div className="mt-3 space-y-3">
+                  {mode === 'solo' ? (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Answer time</span>
+                      <input
+                        type="range" min={5} max={60} step={5}
+                        value={timerSeconds}
+                        onChange={e => setTimerSeconds(Number(e.target.value))}
+                        className="flex-1 accent-indigo-500"
+                        aria-label="Answer time in seconds"
+                      />
+                      <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Reading time</span>
+                        <input
+                          type="range" min={5} max={60} step={5}
+                          value={timerSeconds}
+                          onChange={e => setTimerSeconds(Number(e.target.value))}
+                          className="flex-1 accent-indigo-500"
+                          aria-label="Reading time in seconds"
+                        />
+                        <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Buzz-in time</span>
+                        <input
+                          type="range" min={5} max={60} step={5}
+                          value={buzzTimerSeconds}
+                          onChange={e => setBuzzTimerSeconds(Number(e.target.value))}
+                          className="flex-1 accent-indigo-500"
+                          aria-label="Buzz-in answer time in seconds"
+                        />
+                        <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{buzzTimerSeconds}s</span>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Reading time</span>
-                    <input
-                      type="range" min={5} max={60} step={5}
-                      value={timerSeconds}
-                      onChange={e => setTimerSeconds(Number(e.target.value))}
-                      className="flex-1 accent-indigo-500"
-                      aria-label="Reading time in seconds"
-                    />
-                    <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">Buzz-in time</span>
-                    <input
-                      type="range" min={5} max={60} step={5}
-                      value={buzzTimerSeconds}
-                      onChange={e => setBuzzTimerSeconds(Number(e.target.value))}
-                      className="flex-1 accent-indigo-500"
-                      aria-label="Buzz-in answer time in seconds"
-                    />
-                    <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{buzzTimerSeconds}s</span>
-                  </div>
-                </>
               )}
             </div>
           </Card>

@@ -13,6 +13,7 @@ type QuestionData = {
   correctAnswer: string
   difficulty: Difficulty
   categoryName: string
+  imageUrl?: string
 }
 
 type AnswerState = 'default' | 'correct' | 'incorrect' | 'missed'
@@ -129,6 +130,14 @@ export function QuestionCard({
           )}
         </div>
       </div>
+      {data.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={data.imageUrl}
+          alt="Question illustration"
+          className="w-full max-h-52 object-contain rounded-lg mb-4 bg-gray-100 dark:bg-gray-800"
+        />
+      )}
       <p
         className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-snug"
         aria-live="polite"

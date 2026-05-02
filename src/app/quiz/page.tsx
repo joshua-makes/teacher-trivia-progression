@@ -18,6 +18,8 @@ import { QUESTIONS } from '@/lib/data/questions'
 import { CATEGORIES } from '@/lib/data/categories'
 import { LADDER, getSafeZonePoints, getTimerSeconds, formatPoints } from '@/lib/ladder'
 import { shuffleArray } from '@/lib/shuffle'
+import { loadSettings } from '@/lib/settings'
+import { nextDifficulty } from '@/lib/progression'
 import type { Difficulty } from '@/lib/data/questions'
 import type { QuizSession } from '@/lib/session'
 
@@ -27,6 +29,7 @@ type QuizQuestion = {
   answers: string[]
   correctAnswer: string
   difficulty: Difficulty
+  imageUrl?: string
 }
 
 type GameState =
@@ -78,7 +81,78 @@ const TEAM_TEXT: Record<string, string> = {
   rose:   'text-rose-600 dark:text-rose-400',
 }
 
-const TEAM_QUESTION_POINTS: Record<string, number> = { easy: 100, medium: 200, hard: 300 }
+const TEAM_QUESTION_POINTS: Record<string, number> = (() => {
+  const s = loadSettings()
+  return { easy: s.teamPoints.easy, medium: s.teamPoints.medium, hard: s.teamPoints.hard }
+})()
+
+const TEAM_WRONG_PENALTY_ENABLED: boolean = (() => {
+  const s = loadSettings()
+  return s.wrongAnswerPenalty ?? false
+})()
+
+// ── Adaptive difficulty helpers ───────────────────────────────────────────────
+const ADAPTIVE_WINDOW = 5  // rolling window size for difficulty recalculation
+
+function buildAdaptivePools(
+  catId: number,
+  gradeLevel: string,
+  questionCount: number,
+  customSetId?: string,
+): Record<Difficulty, QuizQuestion[]> {
+  const poolSize = Math.max(questionCount, 10)
+  const diffs: Difficulty[] = ['easy', 'medium', 'hard']
+  const pools: Record<Difficulty, QuizQuestion[]> = { easy: [], medium: [], hard: [] }
+
+  if (catId === 0) {
+    const sets = loadQuestionSets()
+    const set = sets.find(s => s.id === customSetId) ?? sets[0]
+    const customs = set?.questions ?? []
+    for (const q of shuffleArray([...customs])) {
+      const diff: Difficulty = q.difficulty ?? 'medium'
+      pools[diff].push({
+        id: `custom-${q.id}`,
+        question: q.question,
+        answers: shuffleArray([q.correct, ...q.incorrect]),
+        correctAnswer: q.correct,
+        difficulty: diff,
+        imageUrl: q.imageUrl,
+      })
+    }
+    return pools
+  }
+
+  const seenIds = getSeenIds(catId, gradeLevel)
+  const usedIds = new Set<string>()
+  for (const diff of diffs) {
+    const fresh = QUESTIONS.filter(q => q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never) && !seenIds.has(q.id) && !usedIds.has(q.id))
+    const all = QUESTIONS.filter(q => q.category === catId && q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id))
+    const freshGrade = QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never) && !seenIds.has(q.id) && !usedIds.has(q.id))
+    const allGrade = QUESTIONS.filter(q => q.difficulty === diff && q.grades.includes(gradeLevel as never) && !usedIds.has(q.id))
+    const best = fresh.length >= 3 ? fresh : all.length >= 3 ? all : freshGrade.length >= 3 ? freshGrade : allGrade
+    const selected = shuffleArray([...best]).slice(0, poolSize)
+    selected.forEach(q => usedIds.add(q.id))
+    pools[diff] = selected.map(q => ({
+      id: q.id,
+      question: q.question,
+      answers: shuffleArray([q.correct, ...q.incorrect]),
+      correctAnswer: q.correct,
+      difficulty: diff,
+    }))
+  }
+  return pools
+}
+
+function pickFromPool(pool: Record<Difficulty, QuizQuestion[]>, diff: Difficulty): QuizQuestion | null {
+  const order: Difficulty[] =
+    diff === 'easy' ? ['easy', 'medium', 'hard']
+    : diff === 'medium' ? ['medium', 'easy', 'hard']
+    : ['hard', 'medium', 'easy']
+  for (const d of order) {
+    if (pool[d].length > 0) return pool[d].shift()!
+  }
+  return null
+}
 
 export default function QuizPage() {
   const router = useRouter()
@@ -115,6 +189,26 @@ export default function QuizPage() {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
 
+  // ── Adaptive difficulty state ─────────────────────────────────────────────
+  const [adaptiveSequence, setAdaptiveSequence] = useState<QuizQuestion[]>([])
+  const adaptiveSequenceRef = useRef<QuizQuestion[]>([])
+  const adaptivePoolRef = useRef<Record<Difficulty, QuizQuestion[]>>({ easy: [], medium: [], hard: [] })
+  const adaptiveDiffRef = useRef<Difficulty>('easy')
+  const adaptiveWindowRef = useRef<boolean[]>([])
+
+  const queueNextAdaptive = useCallback((wasCorrect: boolean) => {
+    adaptiveWindowRef.current = [...adaptiveWindowRef.current, wasCorrect].slice(-ADAPTIVE_WINDOW)
+    const wins = adaptiveWindowRef.current.filter(Boolean).length
+    const newDiff = nextDifficulty(adaptiveDiffRef.current, wins, adaptiveWindowRef.current.length)
+    adaptiveDiffRef.current = newDiff
+    const nextQ = pickFromPool(adaptivePoolRef.current, newDiff)
+    if (nextQ) {
+      const next = [...adaptiveSequenceRef.current, nextQ]
+      adaptiveSequenceRef.current = next
+      setAdaptiveSequence(next)
+    }
+  }, [])
+
   const loadAllQuestions = useCallback((catId: number, gradeLevel: string, mode: 'solo' | 'team', questionCount: number, customSetId?: string): QuizQuestion[] => {
     const diffs: Difficulty[] = ['easy', 'medium', 'hard']
 
@@ -137,6 +231,7 @@ export default function QuizPage() {
         answers: shuffleArray([q.correct, ...q.incorrect]),
         correctAnswer: q.correct,
         difficulty: q.difficulty ?? diffs[idx % 3],
+        imageUrl: q.imageUrl,
       }))
       return mode === 'team' ? shuffleArray(qs) : qs
     }
@@ -205,13 +300,31 @@ export default function QuizPage() {
     setCurrentRung(1)
     setTeams(sess.teams ? [...sess.teams] : [])
     setBuzzedTeamIndex(null)
-    const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel, sess.mode, sess.questionCount ?? 15, sess.customSetId)
-    setAllQuestions(qs)
+    if (sess.adaptiveDifficulty) {
+      const pools = buildAdaptivePools(sess.categoryId, sess.gradeLevel, sess.questionCount ?? 15, sess.customSetId)
+      adaptivePoolRef.current = pools
+      adaptiveDiffRef.current = 'easy'
+      adaptiveWindowRef.current = []
+      const firstQ = pickFromPool(pools, 'easy')
+      if (firstQ) {
+        adaptiveSequenceRef.current = [firstQ]
+        setAdaptiveSequence([firstQ])
+      }
+      setAllQuestions([])
+    } else {
+      const qs = loadAllQuestions(sess.categoryId, sess.gradeLevel, sess.mode, sess.questionCount ?? 15, sess.customSetId)
+      setAllQuestions(qs)
+    }
     setGameState('playing')
     return () => clearTimer()
   }, [router, loadAllQuestions])
 
-  const currentQuestion = allQuestions[currentRung - 1] ?? null
+  const currentQuestion = session?.adaptiveDifficulty
+    ? (adaptiveSequence[currentRung - 1] ?? null)
+    : (allQuestions[currentRung - 1] ?? null)
+  const totalQCount = session?.adaptiveDifficulty
+    ? (session?.questionCount ?? 15)
+    : allQuestions.length
   const currentRungData = LADDER[currentRung - 1]
   const timerSeconds = session?.timerSeconds ?? (session ? getTimerSeconds(session.gradeLevel) : 30)
   const buzzTimerSeconds = session?.buzzTimerSeconds ?? timerSeconds
@@ -231,14 +344,15 @@ export default function QuizPage() {
       sess.questionHistory = questionHistoryRef.current
       saveSession(sess)
       // Record seen question IDs for smart rotation next game
-      recordSeenIds(sess.categoryId, sess.gradeLevel, allQuestions.map(q => q.id))
+      const seqToRecord = adaptiveSequenceRef.current.length > 0 ? adaptiveSequenceRef.current : allQuestions
+      recordSeenIds(sess.categoryId, sess.gradeLevel, seqToRecord.map(q => q.id))
     }
     setGameState('complete')
     timerRef.current = setTimeout(() => router.push('/results'), 1200)
   }, [currentRung, session?.mode, router, allQuestions])
 
   const handleAnswer = useCallback(
-    (correct: boolean) => {
+    (correct: boolean, timeTakenMs = 0) => {
       if (gameState !== 'playing') return
       if (!session) return
 
@@ -258,15 +372,18 @@ export default function QuizPage() {
             correctAnswer: currentQuestion.correctAnswer,
             answeredBy: correct ? 'You' : null,
             correct,
+            timeTakenMs,
           }]
         }
         setGameState('answered')
         if (correct) {
           playCorrect()
           timerRef.current = setTimeout(() => {
-            if (currentRung >= allQuestions.length) {
+            const qCount = session?.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
+            if (currentRung >= qCount) {
               finishGame(1_000_000, [], true)
             } else {
+              if (session?.adaptiveDifficulty) queueNextAdaptive(true)
               setCurrentRung(r => r + 1)
               setGameState('playing')
             }
@@ -281,7 +398,7 @@ export default function QuizPage() {
         // ── Team buzz-in mode ──────────────────────────────────────────
         // buzzedTeamIndex is guaranteed non-null by the guard above clearTimer
         const bidx = buzzedTeamIndex as number
-        const q = allQuestions[currentRung - 1]
+        const q = currentQuestion
 
         if (correct) {
           playCorrect()
@@ -297,12 +414,15 @@ export default function QuizPage() {
             correctAnswer: q?.correctAnswer ?? '',
             answeredBy: teams[bidx]?.name ?? null,
             correct: true,
+            timeTakenMs,
           }]
           setGameState('answered')
           timerRef.current = setTimeout(() => {
-            if (currentRung >= allQuestions.length) {
+            const qCount = session?.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
+            if (currentRung >= qCount) {
               finishGame(0, newTeams, true)
             } else {
+              if (session?.adaptiveDifficulty) queueNextAdaptive(true)
               setCurrentRung(r => r + 1)
               setBuzzedTeamIndex(null)
               setTriedTeamIndices([])
@@ -313,6 +433,13 @@ export default function QuizPage() {
         } else {
           const newTried = [...triedTeamIndices, bidx]
           setTriedTeamIndices(newTried)
+
+          // Apply wrong answer penalty (deduct the question's point value)
+          const penalty = TEAM_WRONG_PENALTY_ENABLED ? (TEAM_QUESTION_POINTS[q?.difficulty ?? 'easy'] ?? 0) : 0
+          const penalizedTeams = penalty > 0
+            ? teams.map((t, i) => i === bidx ? { ...t, score: Math.max(0, t.score - penalty) } : t)
+            : teams
+          if (penalty > 0) setTeams(penalizedTeams)
 
           if (newTried.length >= teams.length) {
             // All teams failed — show answer and move on
@@ -325,12 +452,15 @@ export default function QuizPage() {
               correctAnswer: q?.correctAnswer ?? '',
               answeredBy: null,
               correct: false,
+              timeTakenMs,
             }]
             setGameState('answered')
             timerRef.current = setTimeout(() => {
-              if (currentRung >= allQuestions.length) {
-                finishGame(0, teams, true)
+              const qCount = session?.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
+              if (currentRung >= qCount) {
+                finishGame(0, penalizedTeams, true)
               } else {
+                if (session?.adaptiveDifficulty) queueNextAdaptive(false)
                 setCurrentRung(r => r + 1)
                 setTriedTeamIndices([])
                 setIsQuestionRevealed(false)
@@ -338,7 +468,7 @@ export default function QuizPage() {
               }
             }, 2800)
           } else {
-            // Steal opportunity
+            // Steal opportunity — penalty already applied above; let remaining teams buzz
             const remaining = teams.map((_, i) => i).filter(i => !newTried.includes(i))
             if (remaining.length === 1) {
               // Only one team left — auto-buzz them in so the game keeps moving
@@ -352,7 +482,7 @@ export default function QuizPage() {
         }
       }
     },
-    [gameState, session, currentRung, allQuestions, buzzedTeamIndex, triedTeamIndices, teams, finishGame, buzzTimerSeconds, currentQuestion],
+    [gameState, session, currentRung, allQuestions, buzzedTeamIndex, triedTeamIndices, teams, finishGame, buzzTimerSeconds, currentQuestion, queueNextAdaptive],
   )
 
   const handleWalkAway = useCallback(() => {
@@ -376,14 +506,16 @@ export default function QuizPage() {
     setEliminatedAnswers([])
     setGameState('answered')
     timerRef.current = setTimeout(() => {
-      if (currentRung >= allQuestions.length) {
+      const qCount = session?.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
+      if (currentRung >= qCount) {
         finishGame(getSafeZonePoints(currentRung), [], false)
       } else {
+        if (session?.adaptiveDifficulty) queueNextAdaptive(false)
         setCurrentRung(r => r + 1)
         setGameState('playing')
       }
     }, 600)
-  }, [skipUsed, gameState, session, currentRung, allQuestions.length, finishGame])
+  }, [skipUsed, gameState, session, currentRung, allQuestions.length, finishGame, queueNextAdaptive])
 
   // Reset eliminated answers when question changes
   useEffect(() => {
@@ -396,14 +528,14 @@ export default function QuizPage() {
     if (!currentQuestion || gameState !== 'playing') return
     saveLiveQuestion({
       questionNumber: currentRung,
-      totalQuestions: allQuestions.length,
+      totalQuestions: totalQCount,
       questionText: currentQuestion.question,
       answers: currentQuestion.answers,
       correctAnswer: currentQuestion.correctAnswer,
       categoryName,
       difficulty: currentQuestion.difficulty,
     })
-  }, [currentRung, currentQuestion, gameState, allQuestions.length, categoryName])
+  }, [currentRung, currentQuestion, gameState, totalQCount, categoryName])
 
   // Clear live question when game is over
   useEffect(() => {
@@ -564,6 +696,11 @@ export default function QuizPage() {
                 <h2 className="text-3xl font-bold text-red-600 dark:text-red-400">No one got it!</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">The answer was:</p>
                 <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{result?.correctAnswer}</p>
+                {TEAM_WRONG_PENALTY_ENABLED && (
+                  <p className="text-sm text-red-500 dark:text-red-400 mt-3">
+                    Point penalty applied for wrong answers
+                  </p>
+                )}
               </>
             )}
             {answeredCountdown !== null && answeredCountdown > 0 ? (
@@ -675,7 +812,7 @@ export default function QuizPage() {
             {/* Top bar */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Question {currentRung} <span className="text-gray-400 dark:text-gray-600">/ {allQuestions.length}</span>
+                Question {currentRung} <span className="text-gray-400 dark:text-gray-600">/ {totalQCount}</span>
                 <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
                 {categoryName}
               </span>
@@ -707,7 +844,7 @@ export default function QuizPage() {
                 <div className="text-[9rem] leading-none font-black text-gray-700 select-none">?</div>
                 <div>
                   <p className="text-sm font-semibold text-gray-300 mb-2">
-                    Question {currentRung} of {allQuestions.length}
+                    Question {currentRung} of {totalQCount}
                   </p>
                   {currentQuestion && <DifficultyBadge difficulty={currentQuestion.difficulty} />}
                   <p className="text-gray-500 text-sm mt-2">
@@ -792,9 +929,10 @@ export default function QuizPage() {
                       correctAnswer: currentQuestion.correctAnswer,
                       difficulty: currentQuestion.difficulty,
                       categoryName,
+                      imageUrl: currentQuestion.imageUrl,
                     }}
                     questionNumber={currentRung}
-                    totalQuestions={allQuestions.length}
+                    totalQuestions={totalQCount}
                     onAnswer={handleAnswer}
                     locked={!buzzing}
                     showTimer={false}
@@ -921,7 +1059,7 @@ export default function QuizPage() {
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 text-center mb-2">
               Ladder
             </p>
-            <LadderDisplay currentRung={currentRung} totalRungs={allQuestions.length} />
+            <LadderDisplay currentRung={currentRung} totalRungs={totalQCount} />
           </Card>
         </div>
 
@@ -931,7 +1069,7 @@ export default function QuizPage() {
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Level {currentRung}
-              <span className="text-gray-400 dark:text-gray-600"> / {allQuestions.length}</span>
+              <span className="text-gray-400 dark:text-gray-600"> / {totalQCount}</span>
               <span className="mx-2 text-gray-300 dark:text-gray-700">·</span>
               {categoryName}
             </span>
@@ -963,7 +1101,7 @@ export default function QuizPage() {
               <div className="text-[9rem] leading-none font-black text-gray-700 select-none">?</div>
               <div>
                 <p className="text-sm font-semibold text-gray-300 mb-2">
-                  Level {currentRung} of {allQuestions.length}
+                  Level {currentRung} of {totalQCount}
                   {currentRungData?.isSafeZone && <span className="ml-2 text-amber-400">🛡️ Safe Zone</span>}
                 </p>
                 {currentQuestion && <DifficultyBadge difficulty={currentQuestion.difficulty} />}
@@ -1042,9 +1180,10 @@ export default function QuizPage() {
                     correctAnswer: currentQuestion.correctAnswer,
                     difficulty: currentQuestion.difficulty,
                     categoryName,
+                    imageUrl: currentQuestion.imageUrl,
                   }}
                   questionNumber={currentRung}
-                  totalQuestions={allQuestions.length}
+                  totalQuestions={totalQCount}
                   timerSeconds={timerSeconds}
                   isPaused={isPaused}
                   onAnswer={handleAnswer}
@@ -1057,7 +1196,7 @@ export default function QuizPage() {
                 <Card className="px-4 py-2.5 mt-3 text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {currentRungData.isSafeZone && '🛡️ Safe Zone · '}
-                    {currentRungData.number === allQuestions.length && '🏆 Final Level · '}
+                    {currentRungData.number === totalQCount && '🏆 Final Level · '}
                     <span className="font-semibold">{formatPoints(currentRungData.points)} points</span>
                     {' · '}
                     <span className="capitalize">{currentRungData.difficulty}</span>

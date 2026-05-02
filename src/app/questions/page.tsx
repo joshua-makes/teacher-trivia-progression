@@ -32,6 +32,7 @@ const EMPTY_FORM: Omit<CustomQuestion, 'id'> = {
   correct: '',
   incorrect: ['', '', ''],
   difficulty: 'medium',
+  imageUrl: '',
 }
 
 type FormState = Omit<CustomQuestion, 'id'> & { id?: string }
@@ -60,6 +61,7 @@ export default function QuestionsPage() {
   const [showImport, setShowImport] = useState(false)
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // AI prompt builder
   const [showAiPrompt, setShowAiPrompt] = useState(false)
@@ -139,12 +141,30 @@ export default function QuestionsPage() {
     if (new Set(allAnswers).size < allAnswers.filter(Boolean).length) {
       e.correct = 'All four answers must be different.'
     }
+    const url = (form.imageUrl ?? '').trim()
+    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image/')) {
+      e.imageUrl = 'Image URL must start with http://, https://, or be a data:image/ URI.'
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   function handleSubmit() {
     if (!validate() || !activeSet) return
+
+    // Duplicate check (new questions only — edits are exempt)
+    if (!editingId) {
+      const isDuplicate = activeSet.questions.some(
+        q =>
+          q.question.trim().toLowerCase() === form.question.trim().toLowerCase() &&
+          q.correct.trim().toLowerCase() === form.correct.trim().toLowerCase(),
+      )
+      if (isDuplicate) {
+        setErrors(e => ({ ...e, question: 'A question with the same text and correct answer already exists in this set.' }))
+        return
+      }
+    }
+
     let nextQs: CustomQuestion[]
     if (editingId) {
       nextQs = activeSet.questions.map(q =>
@@ -164,7 +184,7 @@ export default function QuestionsPage() {
   }
 
   function handleEdit(q: CustomQuestion) {
-    setForm({ question: q.question, correct: q.correct, incorrect: [...q.incorrect], difficulty: q.difficulty ?? 'medium' })
+    setForm({ question: q.question, correct: q.correct, incorrect: [...q.incorrect], difficulty: q.difficulty ?? 'medium', imageUrl: q.imageUrl ?? '' })
     setEditingId(q.id)
     setErrors({})
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -180,6 +200,23 @@ export default function QuestionsPage() {
     setEditingId(null)
     setForm({ ...EMPTY_FORM })
     setErrors({})
+  }
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 512 * 1024) {
+      setErrors(err => ({ ...err, imageUrl: 'Image must be under 512 KB to fit in local storage.' }))
+      e.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm(f => ({ ...f, imageUrl: reader.result as string }))
+      setErrors(err => ({ ...err, imageUrl: undefined }))
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
   }
 
   function handleImport() {
@@ -486,6 +523,49 @@ Rules:
               </div>
             </div>
 
+            <div className="mb-5">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                🖼 Image <span className="font-normal text-gray-400">(optional)</span>
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={form.imageUrl ?? ''}
+                  onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                  placeholder="https://example.com/image.png or leave blank"
+                  className={cn(
+                    'flex-1 rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                    errors.imageUrl ? 'border-red-400' : 'border-gray-300 dark:border-gray-700',
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shrink-0"
+                >
+                  Upload
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+              </div>
+              {errors.imageUrl && <p className="text-xs text-red-500 mb-1">{errors.imageUrl}</p>}
+              {form.imageUrl && !errors.imageUrl && (
+                <div className="relative inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.imageUrl}
+                    alt="Preview"
+                    className="h-24 object-contain rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, imageUrl: '' }))}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold leading-none hover:bg-red-600"
+                    aria-label="Remove image"
+                  >×</button>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Button variant="primary" size="sm" onClick={handleSubmit}>
                 {editingId ? 'Save Changes' : '+ Add Question'}
@@ -620,7 +700,8 @@ Rules:
                 <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">question</code>,{' '}
                 <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">correct</code>, and{' '}
                 <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">incorrect</code>{' '}
-                (3 strings). Optional: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">difficulty</code>.
+                (3 strings). Optional: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">difficulty</code>,{' '}
+                <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">imageUrl</code>.
               </p>
               <textarea
                 value={importJson}
@@ -672,6 +753,10 @@ Rules:
                       )}
                     </div>
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug mb-1.5">{q.question}</p>
+                    {q.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={q.imageUrl} alt="" className="h-12 object-contain rounded mb-1.5 bg-gray-100 dark:bg-gray-800" />
+                    )}
                     <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">✓ {q.correct}</span>
                       {q.incorrect.map((a, i) => (

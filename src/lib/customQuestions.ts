@@ -1,4 +1,5 @@
 import type { Difficulty } from '@/lib/data/questions'
+import { escapeHtml } from '@/lib/utils'
 
 export type CustomQuestion = {
   id: string
@@ -6,6 +7,7 @@ export type CustomQuestion = {
   correct: string
   incorrect: [string, string, string]
   difficulty?: Difficulty
+  imageUrl?: string
 }
 
 export type QuestionSet = {
@@ -124,7 +126,7 @@ export function parseCustomQuestionsJSON(
     }
     if (
       !Array.isArray(q.incorrect) ||
-      q.incorrect.length < 3 ||
+      q.incorrect.length !== 3 ||
       q.incorrect.some(a => typeof a !== 'string' || !a.trim())
     ) {
       return { error: `Item ${i + 1}: "incorrect" must be an array of exactly 3 non-empty strings.` }
@@ -135,12 +137,23 @@ export function parseCustomQuestionsJSON(
       return { error: `Item ${i + 1}: "difficulty" must be "easy", "medium", or "hard".` }
     }
 
+    if (q.imageUrl !== undefined) {
+      if (typeof q.imageUrl !== 'string') {
+        return { error: `Item ${i + 1}: "imageUrl" must be a string.` }
+      }
+      const url = q.imageUrl.trim()
+      if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image/')) {
+        return { error: `Item ${i + 1}: "imageUrl" must be an http/https URL or a data:image/ URI.` }
+      }
+    }
+
     questions.push({
       id: typeof q.id === 'string' && q.id ? q.id : makeId(),
-      question: (q.question as string).trim(),
-      correct: (q.correct as string).trim(),
-      incorrect: (q.incorrect as string[]).slice(0, 3).map(a => a.trim()) as [string, string, string],
+      question: escapeHtml((q.question as string).trim()),
+      correct: escapeHtml((q.correct as string).trim()),
+      incorrect: (q.incorrect as string[]).map(a => escapeHtml(a.trim())) as [string, string, string],
       difficulty: q.difficulty as Difficulty | undefined,
+      imageUrl: typeof q.imageUrl === 'string' && q.imageUrl.trim() ? q.imageUrl.trim() : undefined,
     })
   }
 

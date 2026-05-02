@@ -17,6 +17,7 @@ export type QuestionHistoryItem = {
   correctAnswer: string
   answeredBy: string | null
   correct: boolean
+  timeTakenMs?: number
 }
 
 export type QuizSession = {
@@ -37,6 +38,7 @@ export type QuizSession = {
   timerSeconds: number | null       // null = use grade-level default
   buzzTimerSeconds: number | null   // null = fall back to timerSeconds (team mode only)
   customSetId?: string              // which question set to play (categoryId === 0 only)
+  adaptiveDifficulty?: boolean      // dynamically adjust difficulty based on performance
 }
 
 const SESSION_KEY = 'trivia_session'
@@ -50,6 +52,7 @@ export function createSession(
   timerSeconds: number | null = null,
   buzzTimerSeconds: number | null = null,
   customSetId?: string,
+  adaptiveDifficulty = false,
 ): QuizSession {
   return {
     categoryId,
@@ -69,6 +72,7 @@ export function createSession(
     timerSeconds,
     buzzTimerSeconds,
     customSetId,
+    adaptiveDifficulty,
   }
 }
 

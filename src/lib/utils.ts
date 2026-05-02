@@ -14,3 +14,17 @@ export function formatTime(ms: number): string {
 export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`
 }
+
+/**
+ * Escapes HTML special characters to prevent XSS when rendering user-supplied
+ * text from JSON imports as plain text in the DOM.
+ */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
