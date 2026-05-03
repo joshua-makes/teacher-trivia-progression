@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider dynamic signInUrl="/sign-in" signUpUrl="/sign-in">
       <html lang="en" suppressHydrationWarning>
         <body className={`${plusJakartaSans.variable} font-sans`}>
           <ThemeProvider>

@@ -1,17 +1,16 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { getGameSessions } from '@/lib/actions/sessions'
-import { DashboardClient } from './DashboardClient'
+'use client'
 
-export default async function TeacherDashboard() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Container } from '@/components/layout/Container'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { deleteGameSession, type GameSessionRecord } from '@/lib/actions/sessions'
+import { formatPoints } from '@/lib/ladder'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
-  const sessions = await getGameSessions()
-
-  return <DashboardClient initialSessions={sessions} />
-}
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtDate(ms: number) {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(ms))
@@ -89,19 +88,11 @@ function exportCSV(sessions: GameSessionRecord[]) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function TeacherDashboard() {
+export function DashboardClient({ initialSessions }: { initialSessions: GameSessionRecord[] }) {
   const router = useRouter()
-  const { isLoaded, isSignedIn } = useUser()
-  const [sessions, setSessions] = useState<GameSessionRecord[]>([])
-  const [loading, setLoading] = useState(true)
+  const [sessions, setSessions] = useState<GameSessionRecord[]>(initialSessions)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!isLoaded) return
-    if (!isSignedIn) { router.replace('/'); return }
-    getGameSessions().then(data => { setSessions(data); setLoading(false) })
-  }, [isLoaded, isSignedIn, router])
 
   async function handleDelete(id: string) {
     if (!confirm('Remove this session from your history?')) return
@@ -119,17 +110,6 @@ export default function TeacherDashboard() {
   const overallAccuracy = totalQ > 0 ? totalCorrect / totalQ : 0
   const catStats = buildCategoryStats(sessions)
   const bestCat = catStats[0]
-
-  // ── Render ────────────────────────────────────────────────────────────────
-  if (!isLoaded || loading) {
-    return (
-      <Container>
-        <div className="max-w-5xl mx-auto py-20 text-center text-gray-500 dark:text-gray-400">
-          Loading dashboard…
-        </div>
-      </Container>
-    )
-  }
 
   return (
     <Container>

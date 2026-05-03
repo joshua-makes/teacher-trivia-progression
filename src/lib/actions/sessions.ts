@@ -3,7 +3,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { gameSessions } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
 import type { QuestionHistoryItem } from '@/lib/session'
 
 export type GameSessionRecord = {
@@ -85,5 +85,5 @@ export async function deleteGameSession(id: string): Promise<void> {
   // Only delete own sessions
   await db
     .delete(gameSessions)
-    .where(eq(gameSessions.id, id))
+    .where(and(eq(gameSessions.id, id), eq(gameSessions.userId, userId)))
 }
