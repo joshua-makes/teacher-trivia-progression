@@ -1,6 +1,7 @@
 'use server'
 
 import { auth } from '@clerk/nextjs/server'
+import { cache } from 'react'
 import { db } from '@/lib/db'
 import { gameSessions } from '@/lib/db/schema'
 import { eq, desc, and } from 'drizzle-orm'
@@ -49,7 +50,7 @@ export async function saveGameSession(input: SaveGameSessionInput): Promise<void
   })
 }
 
-export async function getGameSessions(): Promise<GameSessionRecord[]> {
+export const getGameSessions = cache(async (): Promise<GameSessionRecord[]> => {
   const { userId } = await auth()
   if (!userId) return []
 
@@ -76,7 +77,7 @@ export async function getGameSessions(): Promise<GameSessionRecord[]> {
     accuracy: r.accuracy,
     questionHistory: r.questionHistory as QuestionHistoryItem[],
   }))
-}
+})
 
 export async function deleteGameSession(id: string): Promise<void> {
   const { userId } = await auth()

@@ -5,7 +5,7 @@ import { Toaster } from 'sonner'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { ThemeProvider, themeScript } from '@/components/layout/ThemeProvider'
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
@@ -41,6 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider dynamic signInUrl="/sign-in" signUpUrl="/sign-in">
       <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Blocking script: sets `dark` class before first paint — no FOUC */}
+          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        </head>
         <body className={`${plusJakartaSans.variable} font-sans`}>
           <ThemeProvider>
             <div className="flex flex-col min-h-screen">

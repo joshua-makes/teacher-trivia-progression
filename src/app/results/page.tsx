@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -51,7 +50,7 @@ function computeAnalytics(history: QuestionHistoryItem[]) {
 
 export default function ResultsPage() {
   const router = useRouter()
-  const { isSignedIn } = useUser()
+  const [isPending, startTransition] = useTransition()
   const savedRef = useRef(false)
   const [mode, setMode] = useState<'solo' | 'team' | null>(null)
   const [completed, setCompleted] = useState(false)
@@ -92,8 +91,8 @@ export default function ResultsPage() {
     setGradeLevel(session.gradeLevel ?? '3-5')
     setReplaySession(session)
 
-    // Save to cloud history when signed in (once per mount)
-    if (isSignedIn && !savedRef.current) {
+    // Save to cloud history immediately — server action handles unauthenticated gracefully
+    if (!savedRef.current) {
       savedRef.current = true
       const history = session.questionHistory ?? []
       const correct = history.filter(h => h.correct).length
@@ -106,21 +105,27 @@ export default function ResultsPage() {
       } else {
         catName = CATEGORIES.find(c => c.id === session.categoryId)?.name ?? 'General Knowledge'
       }
-      saveGameSession({
-        mode: session.mode,
-        gradeLevel: session.gradeLevel,
-        categoryId: session.categoryId,
-        categoryName: catName,
-        customSetName,
-        finalPoints: session.finalPoints,
-        completed: session.completed,
-        rungReached: session.currentRung ?? 1,
-        questionCount: history.length,
-        correctCount: correct,
-        accuracy: history.length > 0 ? correct / history.length : 0,
-        questionHistory: history,
-      }).then(() => toast.success('Game saved to your dashboard'))
-        .catch(() => toast.error('Could not save game to history'))
+      startTransition(async () => {
+        try {
+          await saveGameSession({
+            mode: session.mode,
+            gradeLevel: session.gradeLevel,
+            categoryId: session.categoryId,
+            categoryName: catName,
+            customSetName,
+            finalPoints: session.finalPoints,
+            completed: session.completed,
+            rungReached: session.currentRung ?? 1,
+            questionCount: history.length,
+            correctCount: correct,
+            accuracy: history.length > 0 ? correct / history.length : 0,
+            questionHistory: history,
+          })
+          toast.success('Game saved to your dashboard')
+        } catch {
+          // Silently ignore — unauthenticated or network error
+        }
+      })
     }
     if (session.mode === 'solo') {
       const score = session.finalPoints !== null ? session.finalPoints : getSafeZonePoints(session.currentRung ?? 1)
@@ -131,7 +136,7 @@ export default function ResultsPage() {
     }
 
     setLoading(false)
-  }, [router, isSignedIn])
+  }, [router])
 
   // Animate score counting up once loaded
   useEffect(() => {
@@ -362,10 +367,15 @@ export default function ResultsPage() {
             </button>
           </div>
 
-          <div className="flex justify-center pb-8">
-            <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-10">
-              🔄 Play Again
-            </Button>
+          <div className="flex flex-col gap-3 pb-8">
+            {isPending && (
+              <p className="text-center text-xs text-gray-400 dark:text-gray-500">💾 Saving to dashboard…</p>
+            )}
+            <div className="flex justify-center">
+              <Button variant="primary" size="lg" onClick={handlePlayAgain} className="px-10">
+                🔄 Play Again
+              </Button>
+            </div>
           </div>
         </div>
       </Container>
@@ -560,15 +570,20 @@ export default function ResultsPage() {
           </Card>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pb-8">
-          {replaySession && (
-            <Button variant="primary" size="lg" onClick={handlePlayAgainSame} className="px-8">
-              🔄 Play Again (same)
-            </Button>
+        <div className="flex flex-col gap-3 pb-8">
+          {isPending && (
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500">💾 Saving to dashboard…</p>
           )}
-          <Button variant="secondary" size="lg" onClick={handlePlayAgain} className="px-8">
-            🏠 New Game
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {replaySession && (
+              <Button variant="primary" size="lg" onClick={handlePlayAgainSame} className="px-8">
+                🔄 Play Again (same)
+              </Button>
+            )}
+            <Button variant="secondary" size="lg" onClick={handlePlayAgain} className="px-8">
+              🏠 New Game
+            </Button>
+          </div>
         </div>
       </div>
     </Container>

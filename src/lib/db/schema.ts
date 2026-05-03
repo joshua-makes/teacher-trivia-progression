@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, jsonb, integer, boolean, real } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, jsonb, integer, boolean, real, index } from 'drizzle-orm/pg-core'
 
 export const questionSets = pgTable('question_sets', {
   id:         text('id').primaryKey(),
@@ -9,7 +9,9 @@ export const questionSets = pgTable('question_sets', {
   shareToken: text('share_token'),
   createdAt:  timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt:  timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (t) => [
+  index('question_sets_user_id_idx').on(t.userId),
+])
 
 export const gameSessions = pgTable('game_sessions', {
   id:              text('id').primaryKey(),          // random uuid
@@ -27,4 +29,6 @@ export const gameSessions = pgTable('game_sessions', {
   correctCount:    integer('correct_count').notNull(),
   accuracy:        real('accuracy').notNull(),       // 0.0–1.0
   questionHistory: jsonb('question_history').notNull(),
-})
+}, (t) => [
+  index('game_sessions_user_id_played_at_idx').on(t.userId, t.playedAt),
+])

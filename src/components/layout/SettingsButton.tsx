@@ -1,7 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { SettingsModal } from './SettingsModal'
+import dynamic from 'next/dynamic'
+
+const SettingsModal = dynamic(
+  () => import('./SettingsModal').then(m => m.SettingsModal),
+  { ssr: false },
+)
 
 export function SettingsButton() {
   const [open, setOpen] = useState(false)

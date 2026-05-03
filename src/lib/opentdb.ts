@@ -18,7 +18,7 @@ export async function fetchQuestions(
 ): Promise<OpenTDBQuestion[] | null> {
   try {
     const url = `https://opentdb.com/api.php?amount=${amount}&category=${categoryId}&difficulty=${difficulty}&type=multiple`
-    const res = await fetch(url, { next: { revalidate: 0 } } as RequestInit & { next?: { revalidate?: number } })
+    const res = await fetch(url, { next: { revalidate: 600 } } as RequestInit & { next?: { revalidate?: number } })
     if (!res.ok) return null
     const data: OpenTDBResponse = await res.json()
     if (data.response_code !== 0) return null

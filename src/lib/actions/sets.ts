@@ -1,9 +1,10 @@
 'use server'
 
 import { auth } from '@clerk/nextjs/server'
+import { cache } from 'react'
 import { db } from '@/lib/db'
 import { questionSets } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { QuestionSet } from '@/lib/customQuestions'
 
 export type SharedSetPreview = {
@@ -14,7 +15,7 @@ export type SharedSetPreview = {
 }
 
 /** Fetch all question sets for the signed-in user */
-export async function getCloudSets(): Promise<QuestionSet[]> {
+export const getCloudSets = cache(async (): Promise<QuestionSet[]> => {
   const { userId } = await auth()
   if (!userId) return []
 
@@ -30,7 +31,7 @@ export async function getCloudSets(): Promise<QuestionSet[]> {
     questions: r.questions as QuestionSet['questions'],
     createdAt: r.createdAt.getTime(),
   }))
-}
+})
 
 /**
  * Upsert a single question set for the signed-in user.
@@ -69,7 +70,7 @@ export async function deleteCloudSet(setId: string): Promise<void> {
 
   await db
     .delete(questionSets)
-    .where(eq(questionSets.id, setId))
+    .where(and(eq(questionSets.id, setId), eq(questionSets.userId, userId)))
 }
 
 /**
@@ -85,9 +86,23 @@ export async function mergeSetsOnSignIn(localSets: QuestionSet[]): Promise<Quest
   const cloudSets = await getCloudSets()
   const cloudById = new Map(cloudSets.map(s => [s.id, s]))
 
-  // Push any local-only sets up to cloud
+  // Batch-upsert all local-only sets in a single query
   const localOnlySets = localSets.filter(s => !cloudById.has(s.id))
-  await Promise.all(localOnlySets.map(s => upsertCloudSet(s)))
+  if (localOnlySets.length > 0) {
+    const now = new Date()
+    await db
+      .insert(questionSets)
+      .values(localOnlySets.map(s => ({
+        id: s.id,
+        userId,
+        name: s.name,
+        emoji: s.emoji,
+        questions: s.questions,
+        createdAt: new Date(s.createdAt),
+        updatedAt: now,
+      })))
+      .onConflictDoNothing()
+  }
 
   // Merge: start with all cloud sets, then add local-only
   const merged = [...cloudSets, ...localOnlySets]
@@ -103,12 +118,12 @@ export async function shareSet(setId: string): Promise<string | null> {
   const { userId } = await auth()
   if (!userId) return null
 
-  // Check ownership
+  // Single query — ownership check folded into WHERE
   const [row] = await db
-    .select({ shareToken: questionSets.shareToken, userId: questionSets.userId })
+    .select({ shareToken: questionSets.shareToken })
     .from(questionSets)
-    .where(eq(questionSets.id, setId))
-  if (!row || row.userId !== userId) return null
+    .where(and(eq(questionSets.id, setId), eq(questionSets.userId, userId)))
+  if (!row) return null
 
   // Reuse existing token or create a new one
   if (row.shareToken) return row.shareToken
@@ -117,7 +132,7 @@ export async function shareSet(setId: string): Promise<string | null> {
   await db
     .update(questionSets)
     .set({ shareToken: token, updatedAt: new Date() })
-    .where(eq(questionSets.id, setId))
+    .where(and(eq(questionSets.id, setId), eq(questionSets.userId, userId)))
   return token
 }
 
@@ -128,16 +143,11 @@ export async function unshareSet(setId: string): Promise<void> {
   const { userId } = await auth()
   if (!userId) return
 
-  const [row] = await db
-    .select({ userId: questionSets.userId })
-    .from(questionSets)
-    .where(eq(questionSets.id, setId))
-  if (!row || row.userId !== userId) return
-
+  // No SELECT needed — ownership check is in the UPDATE WHERE clause
   await db
     .update(questionSets)
     .set({ shareToken: null, updatedAt: new Date() })
-    .where(eq(questionSets.id, setId))
+    .where(and(eq(questionSets.id, setId), eq(questionSets.userId, userId)))
 }
 
 /**
