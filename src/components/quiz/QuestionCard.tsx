@@ -30,6 +30,7 @@ export function QuestionCard({
   revealAnswer = false,
   suppressFeedback = false,
   eliminatedAnswers = [] as string[],
+  enableKeyboardAnswers = false,
 }: {
   data: QuestionData
   questionNumber: number
@@ -48,12 +49,17 @@ export function QuestionCard({
   suppressFeedback?: boolean
   /** Answers to hide (used by 50/50 lifeline) */
   eliminatedAnswers?: string[]
+  /** When true, pressing 1–4 selects the corresponding answer */
+  enableKeyboardAnswers?: boolean
 }) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [remaining, setRemaining] = useState(timerSeconds)
   const [answered, setAnswered] = useState(false)
   const [startTime] = useState(Date.now())
+  // Declared after remaining — used in urgency calculations
+  // (isUrgent defined below after TIMER_SECONDS)
   const TIMER_SECONDS = timerSeconds
+  const isUrgent = remaining <= 5 && !answered
 
   const isPaused = externalIsPaused
 
@@ -91,6 +97,21 @@ export function QuestionCard({
     setRemaining(timerSeconds)
   }, [data.question, timerSeconds])
 
+  // Keyboard 1–4 to select answers
+  useEffect(() => {
+    if (!enableKeyboardAnswers || answered || isPaused || locked) return
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const idx = parseInt(e.key) - 1
+      const visible = data.answers.filter(a => !eliminatedAnswers.includes(a))
+      if (idx >= 0 && idx < visible.length && visible[idx]) {
+        handleAnswer(visible[idx]!)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [enableKeyboardAnswers, answered, isPaused, locked, data.answers, eliminatedAnswers, handleAnswer])
+
   return (
     <Card className="p-6 overflow-hidden">
       {/* Depleting timer bar — bleeds to card edges, color shifts as time runs low */}
@@ -102,7 +123,7 @@ export function QuestionCard({
                 ? 'bg-emerald-400 dark:bg-emerald-500'
                 : remaining / TIMER_SECONDS > 0.25
                 ? 'bg-amber-400 dark:bg-amber-500'
-                : 'bg-red-500 dark:bg-red-600'
+                : `bg-red-500 dark:bg-red-600${isUrgent ? ' animate-pulse' : ''}`
             }`}
             style={{ width: `${(remaining / TIMER_SECONDS) * 100}%` }}
           />
@@ -121,7 +142,7 @@ export function QuestionCard({
                 role="timer"
                 aria-label={`${remaining} seconds remaining`}
                 className={`text-sm font-mono font-bold tabular-nums ${
-                  remaining <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-400 dark:text-gray-500'
+                  isUrgent ? 'text-red-500 animate-pulse' : 'text-gray-400 dark:text-gray-500'
                 }`}
               >
                 {remaining}s

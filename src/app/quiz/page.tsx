@@ -176,7 +176,6 @@ export default function QuizPage() {
   const [buzzFlashTeam, setBuzzFlashTeam] = useState<Team | null>(null)
   // Lifelines (solo mode)
   const [fiftyfiftyUsed, setFiftyfiftyUsed] = useState(false)
-  const [skipUsed, setSkipUsed] = useState(false)
   const [eliminatedAnswers, setEliminatedAnswers] = useState<string[]>([])
   const [isSoloRevealed, setIsSoloRevealed] = useState(false)
   // Team: countdown shown on the answered flash screen
@@ -504,9 +503,8 @@ export default function QuizPage() {
   }, [fiftyfiftyUsed, gameState, currentQuestion])
 
   const handleSkip = useCallback(() => {
-    if (skipUsed || gameState !== 'playing' || !session || session.mode !== 'solo') return
+    if (gameState !== 'playing' || !session || session.mode !== 'solo') return
     clearTimer()
-    setSkipUsed(true)
     setEliminatedAnswers([])
     setGameState('answered')
     timerRef.current = setTimeout(() => {
@@ -519,7 +517,23 @@ export default function QuizPage() {
         setGameState('playing')
       }
     }, 600)
-  }, [skipUsed, gameState, session, currentRung, allQuestions.length, finishGame, queueNextAdaptive])
+  }, [gameState, session, currentRung, allQuestions.length, finishGame, queueNextAdaptive])
+
+  const handleTeamSkip = useCallback(() => {
+    if (gameState !== 'playing' || !session || session.mode !== 'team') return
+    clearTimer()
+    setBuzzedTeamIndex(null)
+    setTriedTeamIndices([])
+    setIsQuestionRevealed(false)
+    const qCount = session.adaptiveDifficulty ? (session.questionCount ?? 15) : allQuestions.length
+    if (currentRung >= qCount) {
+      finishGame(0, teams, true)
+    } else {
+      if (session.adaptiveDifficulty) queueNextAdaptive(false)
+      setCurrentRung(r => r + 1)
+      setGameState('playing')
+    }
+  }, [gameState, session, currentRung, allQuestions.length, finishGame, teams, queueNextAdaptive])
 
   // Reset eliminated answers when question changes
   useEffect(() => {
@@ -836,6 +850,11 @@ export default function QuizPage() {
                 >
                   {isPaused ? '▶️' : '⏸️'}
                 </button>
+                {isQuestionRevealed && (
+                  <Button variant="ghost" size="sm" onClick={handleTeamSkip} title="Skip to next question">
+                    ⏭ Skip
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
                   ✕ End Game
                 </Button>
@@ -1041,6 +1060,7 @@ export default function QuizPage() {
             <div className="space-y-3">
               {[
                 ['Space / Enter', 'Reveal question'],
+                ['1 – 4', 'Select answer'],
                 ['P', 'Pause / resume'],
                 ['T', 'Open teacher window'],
                 ['?', 'Show this overlay'],
@@ -1161,10 +1181,11 @@ export default function QuizPage() {
                   </button>
                   <button
                     onClick={handleSkip}
-                    disabled={skipUsed || gameState !== 'playing'}
-                    title="Skip this question (once per game)"
+                    disabled={gameState !== 'playing'}
+                    title="Skip this question"
                     className={`px-3 py-1.5 rounded-lg border-2 text-sm font-bold transition-all
-                      ${skipUsed
+                      ${
+                        gameState !== 'playing'
                         ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         : 'border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
                       }`}
@@ -1192,6 +1213,7 @@ export default function QuizPage() {
                   isPaused={isPaused}
                   onAnswer={handleAnswer}
                   eliminatedAnswers={eliminatedAnswers}
+                  enableKeyboardAnswers
                 />
               )}
 

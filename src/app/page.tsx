@@ -291,7 +291,9 @@ export default function HomePage() {
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {filteredCategories.map(cat => (
+              {filteredCategories.map(cat => {
+                const qCount = QUESTIONS.filter(q => q.category === cat.id && q.grades.includes(gradeLevel)).length
+                return (
                 <button
                   key={cat.id}
                   onClick={() => setCategoryId(cat.id)}
@@ -309,8 +311,10 @@ export default function HomePage() {
                   <Emoji emoji={cat.emoji} size={32} className="mb-1" />
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{cat.name}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{cat.description}</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-medium">{qCount} questions</div>
                 </button>
-              ))}
+                )
+              })}
             </div>
 
             {/* Question preview — built-in categories only */}
