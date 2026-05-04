@@ -1,11 +1,17 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react'
+import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { gameSessions } from '@/lib/db/schema'
 import { eq, desc, and } from 'drizzle-orm'
 import type { QuestionHistoryItem } from '@/lib/session'
+
+async function getAuthUserId(): Promise<string | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id ?? null
+}
 
 export type GameSessionRecord = {
   id: string
@@ -27,7 +33,7 @@ export type GameSessionRecord = {
 export type SaveGameSessionInput = Omit<GameSessionRecord, 'id' | 'playedAt'>
 
 export async function saveGameSession(input: SaveGameSessionInput): Promise<void> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return
 
   const id = crypto.randomUUID()
@@ -51,7 +57,7 @@ export async function saveGameSession(input: SaveGameSessionInput): Promise<void
 }
 
 export const getGameSessions = cache(async (): Promise<GameSessionRecord[]> => {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return []
 
   const rows = await db
@@ -80,7 +86,7 @@ export const getGameSessions = cache(async (): Promise<GameSessionRecord[]> => {
 })
 
 export async function deleteGameSession(id: string): Promise<void> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return
 
   // Only delete own sessions

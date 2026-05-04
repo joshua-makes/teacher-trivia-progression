@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'sonner'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
@@ -39,23 +38,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider dynamic signInUrl="/sign-in" signUpUrl="/sign-in">
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          {/* Blocking script: sets `dark` class before first paint — no FOUC */}
-          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        </head>
-        <body className={`${plusJakartaSans.variable} font-sans`}>
-          <ThemeProvider>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster richColors position="bottom-right" />
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Blocking script: sets `dark` class before first paint — no FOUC */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${plusJakartaSans.variable} font-sans`}>
+        <ThemeProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
+      </body>
+    </html>
   )
 }

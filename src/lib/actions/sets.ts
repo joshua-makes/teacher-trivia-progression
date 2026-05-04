@@ -1,11 +1,17 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react'
+import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { questionSets } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import type { QuestionSet } from '@/lib/customQuestions'
+
+async function getAuthUserId(): Promise<string | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id ?? null
+}
 
 export type SharedSetPreview = {
   name: string
@@ -16,7 +22,7 @@ export type SharedSetPreview = {
 
 /** Fetch all question sets for the signed-in user */
 export const getCloudSets = cache(async (): Promise<QuestionSet[]> => {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return []
 
   const rows = await db
@@ -38,7 +44,7 @@ export const getCloudSets = cache(async (): Promise<QuestionSet[]> => {
  * Called whenever the user saves/edits a set while signed in.
  */
 export async function upsertCloudSet(set: QuestionSet): Promise<void> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return
 
   await db
@@ -65,7 +71,7 @@ export async function upsertCloudSet(set: QuestionSet): Promise<void> {
 
 /** Delete a question set from cloud (called when user deletes a set) */
 export async function deleteCloudSet(setId: string): Promise<void> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return
 
   await db
@@ -80,7 +86,7 @@ export async function deleteCloudSet(setId: string): Promise<void> {
  * Returns the merged array to store back into localStorage.
  */
 export async function mergeSetsOnSignIn(localSets: QuestionSet[]): Promise<QuestionSet[]> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return localSets
 
   const cloudSets = await getCloudSets()
@@ -115,7 +121,7 @@ export async function mergeSetsOnSignIn(localSets: QuestionSet[]): Promise<Quest
  * Returns the share token string.
  */
 export async function shareSet(setId: string): Promise<string | null> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return null
 
   // Single query — ownership check folded into WHERE
@@ -140,7 +146,7 @@ export async function shareSet(setId: string): Promise<string | null> {
  * Revoke the share token for a set the user owns.
  */
 export async function unshareSet(setId: string): Promise<void> {
-  const { userId } = await auth()
+  const userId = await getAuthUserId()
   if (!userId) return
 
   // No SELECT needed — ownership check is in the UPDATE WHERE clause

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -41,9 +40,8 @@ const EMPTY_FORM: Omit<CustomQuestion, 'id'> = {
 type FormState = Omit<CustomQuestion, 'id'> & { id?: string }
 type ErrorMap = Partial<Record<keyof FormState | 'incorrect0' | 'incorrect1' | 'incorrect2', string>>
 
-export function QuestionsClient({ serverSets }: { serverSets: QuestionSet[] }) {
+export function QuestionsClient({ serverSets, isSignedIn }: { serverSets: QuestionSet[]; isSignedIn: boolean }) {
   const router = useRouter()
-  const { isSignedIn } = useUser()
 
   // ── Sets state ────────────────────────────────────────
   const [sets, setSets] = useState<QuestionSet[]>([])
