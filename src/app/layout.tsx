@@ -6,6 +6,7 @@ import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { ThemeProvider, themeScript } from '@/components/layout/ThemeProvider'
+import { FullscreenButton } from '@/components/layout/FullscreenButton'
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
+          <FullscreenButton />
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>

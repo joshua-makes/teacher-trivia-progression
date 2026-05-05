@@ -3,7 +3,6 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ThemeToggle } from './ThemeToggle'
-import { FullscreenButton } from './FullscreenButton'
 import { SettingsButton } from './SettingsButton'
 import { MobileNav } from './MobileNav'
 import { ActiveLink } from './ActiveLink'
@@ -15,9 +14,39 @@ async function signOut() {
   redirect('/')
 }
 
+const PlayIcon = () => (
+  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+    <path d="M3 2l9 5-9 5V2z"/>
+  </svg>
+)
+const DashboardIcon = () => (
+  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+    <rect x="0"    y="6" width="3.5" height="8"  rx="0.5"/>
+    <rect x="5.25" y="3" width="3.5" height="11" rx="0.5"/>
+    <rect x="10.5" y="0" width="3.5" height="14" rx="0.5"/>
+  </svg>
+)
+const QuestionsIcon = () => (
+  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 12.5h10M9.5 2.5l2 2-7 7H2.5v-2l7-7z"/>
+  </svg>
+)
+const TeacherIcon = () => (
+  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="1" y="1" width="12" height="9" rx="1.5"/>
+    <path d="M5 13h4M7 10v3"/>
+  </svg>
+)
+const ExternalIcon = () => (
+  <svg className="w-3 h-3 opacity-40 shrink-0" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+    <path d="M2 10 10 2M5 2h5v5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 export async function Header() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? ''
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200/80 dark:border-gray-800 backdrop-blur-md bg-white/90 dark:bg-gray-950/90 shadow-sm dark:shadow-none">
@@ -26,7 +55,9 @@ export async function Header() {
           <Image src="/ladderquiz-logo.png" alt="Ladder Quiz" width={40} height={40} className="rounded-lg" priority />
           <span className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">Ladder Quiz</span>
         </Link>
+
         <div className="flex items-center gap-1">
+          {/* Primary nav links */}
           <ActiveLink
             href="/play"
             exact
@@ -34,23 +65,25 @@ export async function Header() {
             activeClassName="bg-teal-700 text-white"
             title="Start a new game"
           >
-            ▶ Play
+            <PlayIcon /> Play
           </ActiveLink>
           {user && (
             <ActiveLink
               href="/dashboard"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              activeClassName="bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300"
               title="View your class game history"
             >
-              📊 Dashboard
+              <DashboardIcon /> Dashboard
             </ActiveLink>
           )}
           <ActiveLink
             href="/questions"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            activeClassName="bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300"
             title="Manage your custom question bank"
           >
-            ✏️ Questions
+            <QuestionsIcon /> Questions
           </ActiveLink>
           <ActiveLink
             href="/teacher"
@@ -59,28 +92,35 @@ export async function Header() {
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Open teacher view in a new window"
           >
-            👁 Teacher
-            <svg className="w-3 h-3 opacity-50" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M2 10 10 2M5 2h5v5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <TeacherIcon /> Teacher <ExternalIcon />
           </ActiveLink>
-          <FullscreenButton />
+
+          {/* Separator */}
+          <div className="hidden sm:block h-5 w-px bg-gray-200 dark:bg-gray-700 mx-1" aria-hidden="true" />
+
+          {/* Utility buttons */}
           <SettingsButton />
           <ThemeToggle />
+
+          {/* User section */}
           {user ? (
-            <>
-              <span className="hidden sm:block text-sm text-gray-500 dark:text-gray-400 ml-1">
-                {user.user_metadata?.full_name?.split(' ')[0] ?? user.email?.split('@')[0]}
-              </span>
+            <div className="hidden sm:flex items-center gap-1 ml-0.5">
+              <div
+                className="w-7 h-7 rounded-full bg-teal-600 text-white text-xs font-bold flex items-center justify-center select-none shrink-0"
+                title={displayName}
+                aria-label={`Signed in as ${displayName}`}
+              >
+                {displayName[0]?.toUpperCase()}
+              </div>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="hidden sm:block ml-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   Sign out
                 </button>
               </form>
-            </>
+            </div>
           ) : (
             <Link
               href="/sign-in"
@@ -89,7 +129,8 @@ export async function Header() {
               Sign in
             </Link>
           )}
-          <MobileNav isSignedIn={!!user} onSignOut={signOut} />
+
+          <MobileNav isSignedIn={!!user} userName={displayName} onSignOut={signOut} />
         </div>
       </div>
     </header>

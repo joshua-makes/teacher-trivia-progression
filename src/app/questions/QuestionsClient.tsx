@@ -270,8 +270,12 @@ export function QuestionsClient({ serverSets, isSignedIn }: { serverSets: Questi
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 512 * 1024) {
-      setErrors(err => ({ ...err, imageUrl: 'Image must be under 512 KB to fit in local storage.' }))
+    // Cloud-synced sets can store large images in the DB.
+    // Local-only sets are capped at 512 KB to stay within localStorage limits.
+    const maxBytes = isSignedIn ? 5 * 1024 * 1024 : 512 * 1024
+    const limitLabel = isSignedIn ? '5 MB' : '512 KB'
+    if (file.size > maxBytes) {
+      setErrors(err => ({ ...err, imageUrl: `Image must be under ${limitLabel}.${isSignedIn ? '' : ' Sign in to upload larger images.'}` }))
       e.target.value = ''
       return
     }
@@ -711,6 +715,11 @@ Rules:
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
               </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                {isSignedIn
+                  ? 'Cloud-synced — images up to 5 MB stored in the database.'
+                  : 'Local only — use a URL or upload under 512 KB. Sign in to store larger images.'}
+              </p>
               {errors.imageUrl && <p className="text-xs text-red-500 mb-1">{errors.imageUrl}</p>}
               {form.imageUrl && !errors.imageUrl && (
                 <div className="relative inline-block">
