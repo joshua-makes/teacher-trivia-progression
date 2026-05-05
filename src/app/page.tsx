@@ -37,7 +37,7 @@ export default async function LandingPage() {
         {/* Hero */}
         <div className="rounded-3xl bg-gray-900 border border-gray-800 text-center py-16 px-8 mt-6 mb-10 shadow-xl relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-            <div className="w-80 h-80 rounded-full bg-indigo-500/30 blur-3xl" />
+            <div className="w-80 h-80 rounded-full bg-teal-500/30 blur-3xl" />
           </div>
           <div className="relative">
             <Image
@@ -55,7 +55,7 @@ export default async function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/play"
-                className="inline-flex items-center justify-center gap-2 px-10 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-base transition-all shadow-lg shadow-indigo-500/30"
+                className="inline-flex items-center justify-center gap-2 px-10 py-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-semibold text-base transition-all shadow-lg shadow-teal-500/30"
               >
                 Start a Game
               </Link>

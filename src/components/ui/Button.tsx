@@ -20,7 +20,7 @@ export function Button({
         size === 'md' && 'px-5 py-2.5 text-base',
         size === 'lg' && 'px-8 py-3.5 text-lg',
         variant === 'primary' &&
-          'bg-gradient-to-b from-indigo-500 to-indigo-600 text-white hover:from-indigo-400 hover:to-indigo-500 active:from-indigo-700 active:to-indigo-700 shadow-md shadow-indigo-500/25 focus:ring-indigo-500',
+          'bg-gradient-to-b from-teal-500 to-teal-600 text-white hover:from-teal-400 hover:to-teal-500 active:from-teal-700 active:to-teal-700 shadow-md shadow-teal-500/25 focus:ring-teal-500',
         variant === 'secondary' &&
           'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:border dark:border-gray-600',
         variant === 'ghost' &&

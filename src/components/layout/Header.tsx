@@ -30,7 +30,8 @@ export async function Header() {
           <ActiveLink
             href="/play"
             exact
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white transition-colors"
+            activeClassName="bg-teal-700 text-white"
             title="Start a new game"
           >
             ▶ Play
@@ -59,6 +60,9 @@ export async function Header() {
             title="Open teacher view in a new window"
           >
             👁 Teacher
+            <svg className="w-3 h-3 opacity-50" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 10 10 2M5 2h5v5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </ActiveLink>
           <FullscreenButton />
           <SettingsButton />
@@ -80,7 +84,7 @@ export async function Header() {
           ) : (
             <Link
               href="/sign-in"
-              className="hidden sm:block ml-1 px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+              className="hidden sm:block ml-1 px-3 py-1.5 rounded-lg text-sm font-semibold bg-teal-600 hover:bg-teal-700 text-white transition-colors"
             >
               Sign in
             </Link>

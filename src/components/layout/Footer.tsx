@@ -5,7 +5,7 @@ export function Footer() {
         Built with ❤️ for classrooms ·{' '}
         <a
           href="https://ladderquiz.com"
-          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
         >
           ladderquiz.com
         </a>{' '}
@@ -14,7 +14,7 @@ export function Footer() {
           href="https://github.com/joshua-makes/teacher-trivia-progression"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
         >
           GitHub
         </a>

@@ -187,10 +187,10 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
         {resumableSession && (() => {
           const cat = CATEGORIES.find(c => c.id === resumableSession.categoryId)
           return (
-            <div className="mb-6 rounded-2xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="mb-6 rounded-2xl border border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-950/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1">
-                <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">Resume your game?</p>
-                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
+                <p className="text-sm font-bold text-teal-800 dark:text-teal-200">Resume your game?</p>
+                <p className="text-xs text-teal-600 dark:text-teal-400 mt-0.5">
                   {cat?.emoji} {cat?.name ?? 'Unknown'}
                   {' · '}
                   {resumableSession.gradeLevel}
@@ -230,7 +230,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
           <Card className="p-5">
             <h2 className="flex items-baseline gap-3 mb-4">
               <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">1</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Grade Level</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Grade Level</span>
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {GRADE_LEVELS.map(gl => (
@@ -240,12 +240,12 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                   className={cn(
                     'relative rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all text-center',
                     gradeLevel === gl.value
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 text-gray-700 dark:text-gray-300',
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-teal-300 text-gray-700 dark:text-gray-300',
                   )}
                 >
                   {gradeLevel === gl.value && (
-                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                   )}
                   <Emoji emoji={gl.emoji} size={36} className="mx-auto mb-1" />
                   <div>{gl.label}</div>
@@ -259,7 +259,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
             <div className="flex items-center justify-between mb-3">
               <h2 className="flex items-baseline gap-3">
                 <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">2</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Category</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Category</span>
               </h2>
               <button
                 onClick={() => {
@@ -283,13 +283,13 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                   className={cn(
                     'relative rounded-lg border-2 p-3 text-left transition-all',
                     categoryId === cat.id
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 shadow-sm'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
                   )}
                   aria-pressed={categoryId === cat.id}
                 >
                   {categoryId === cat.id && (
-                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                   )}
                   <Emoji emoji={cat.emoji} size={32} className="mb-1" />
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{cat.name}</div>
@@ -305,7 +305,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
               <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                 <button
                   onClick={() => setShowPreview(p => !p)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline"
                 >
                   {showPreview ? '\u25be' : '\u25b8'} Preview questions ({QUESTIONS.filter(q => q.category === categoryId && q.grades.includes(gradeLevel)).length} for this grade)
                 </button>
@@ -340,10 +340,10 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
               {filteredCustomSets.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Your Sets</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Your Sets</span>
                     <button
                       onClick={() => router.push('/questions')}
-                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-500 transition-colors"
+                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-teal-500 transition-colors"
                     >
                       Manage →
                     </button>
@@ -356,13 +356,13 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                         className={cn(
                           'relative rounded-lg border-2 p-3 text-left transition-all',
                           categoryId === 0 && selectedSetId === set.id
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
-                            : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                            ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 shadow-sm'
+                            : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-teal-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
                         )}
                         aria-pressed={categoryId === 0 && selectedSetId === set.id}
                       >
                         {categoryId === 0 && selectedSetId === set.id && (
-                          <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                          <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                         )}
                         <span className="text-2xl mb-1 block">{set.emoji}</span>
                         <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight">{set.name}</div>
@@ -374,19 +374,19 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
               ) : customSets.length > 0 ? (
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   No sets for <span className="font-semibold">{gradeLevel}</span> —{' '}
-                  <button onClick={() => router.push('/questions')} className="underline hover:text-indigo-500">manage sets →</button>
+                  <button onClick={() => router.push('/questions')} className="underline hover:text-teal-500">manage sets →</button>
                 </p>
               ) : (
                 <div className="space-y-2">
                   <button
                     onClick={() => router.push('/questions')}
-                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    className="text-sm text-teal-600 dark:text-teal-400 hover:underline font-medium"
                   >
                     ✏️ Create a custom question set →
                   </button>
                   {!isSignedIn && (
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      <button onClick={() => router.push('/sign-in?next=/play')} className="underline hover:text-indigo-500">Sign in</button>
+                      <button onClick={() => router.push('/sign-in?next=/play')} className="underline hover:text-teal-500">Sign in</button>
                       {' '}to sync your question sets across devices.
                     </p>
                   )}
@@ -399,7 +399,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
           <Card className="p-5">
             <h2 className="flex items-baseline gap-3 mb-4">
               <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">3</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Game Mode</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Game Mode</span>
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -407,13 +407,13 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                 className={cn(
                   'relative rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'solo'
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-teal-300',
                 )}
                 aria-pressed={mode === 'solo'}
               >
                 {mode === 'solo' && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                 )}
                 <Emoji emoji="🏫" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Classroom</div>
@@ -424,13 +424,13 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                 className={cn(
                   'relative rounded-lg border-2 p-4 text-center transition-all',
                   mode === 'team'
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 shadow-sm'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-teal-300',
                 )}
                 aria-pressed={mode === 'team'}
               >
                 {mode === 'team' && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-bold leading-none">✓</span>
                 )}
                 <Emoji emoji="🏆" size={44} className="mx-auto mb-2" />
                 <div className="font-semibold text-gray-900 dark:text-gray-100">Teams</div>
@@ -447,8 +447,8 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                     className={cn(
                       'min-w-[2.5rem] px-2 h-9 rounded-lg border-2 font-bold text-sm transition-all',
                       questionCount === n
-                        ? 'border-indigo-500 bg-indigo-500 text-white'
-                        : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400',
+                        ? 'border-teal-500 bg-teal-500 text-white'
+                        : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-teal-400',
                     )}
                   >
                     {n}
@@ -486,7 +486,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                         type="range" min={5} max={60} step={5}
                         value={timerSeconds}
                         onChange={e => setTimerSeconds(Number(e.target.value))}
-                        className="flex-1 accent-indigo-500"
+                        className="flex-1 accent-teal-500"
                         aria-label="Answer time in seconds"
                       />
                       <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
@@ -499,7 +499,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                           type="range" min={5} max={60} step={5}
                           value={timerSeconds}
                           onChange={e => setTimerSeconds(Number(e.target.value))}
-                          className="flex-1 accent-indigo-500"
+                          className="flex-1 accent-teal-500"
                           aria-label="Reading time in seconds"
                         />
                         <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{timerSeconds}s</span>
@@ -510,7 +510,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                           type="range" min={5} max={60} step={5}
                           value={buzzTimerSeconds}
                           onChange={e => setBuzzTimerSeconds(Number(e.target.value))}
-                          className="flex-1 accent-indigo-500"
+                          className="flex-1 accent-teal-500"
                           aria-label="Buzz-in answer time in seconds"
                         />
                         <span className="text-sm font-bold tabular-nums text-gray-700 dark:text-gray-300 w-10 text-right">{buzzTimerSeconds}s</span>
@@ -527,7 +527,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
             <Card className="p-5">
               <h2 className="flex items-baseline gap-3 mb-4">
                 <span className="text-5xl font-black leading-none text-gray-200 dark:text-gray-700 select-none">4</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Team Setup</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Team Setup</span>
               </h2>
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Teams:</span>
@@ -539,8 +539,8 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
                       className={cn(
                         'w-9 h-9 rounded-full border-2 font-bold text-sm transition-all',
                         teamCount === n
-                          ? 'border-indigo-500 bg-indigo-500 text-white'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-indigo-400',
+                          ? 'border-teal-500 bg-teal-500 text-white'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-teal-400',
                       )}
                     >
                       {n}

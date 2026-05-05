@@ -382,7 +382,7 @@ Rules:
                   onKeyDown={e => e.key === 'Enter' && handleCreateSet()}
                   placeholder="e.g. Chapter 5 Review, Geometry Basics…"
                   className={cn(
-                    'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                    'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500',
                     newSetError ? 'border-red-400' : 'border-gray-300 dark:border-gray-700',
                   )}
                 />
@@ -399,8 +399,8 @@ Rules:
                       className={cn(
                         'w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all',
                         newSetEmoji === e
-                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 scale-110'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                          ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 scale-110'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-teal-300',
                       )}
                     >{e}</button>
                   ))}
@@ -419,8 +419,8 @@ Rules:
                       className={cn(
                         'px-3 py-1.5 rounded-lg border-2 text-xs font-semibold transition-all',
                         newSetGrade === g
-                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-300',
+                          ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-300',
                       )}
                     >
                       {g === 'all' ? 'All grades' : `Grade ${g}`}
@@ -458,7 +458,7 @@ Rules:
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {set.questions.length} question{set.questions.length !== 1 ? 's' : ''}
                         {set.gradeLevel && (
-                          <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+                          <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400">
                             {set.gradeLevel}
                           </span>
                         )}
@@ -466,7 +466,7 @@ Rules:
                       <div className="flex gap-2 mt-3 flex-wrap">
                         <button
                           onClick={() => openSet(set.id)}
-                          className="text-xs px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors font-medium"
+                          className="text-xs px-2.5 py-1 rounded-lg border border-teal-200 dark:border-teal-800 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors font-medium"
                         >
                           ✏️ Edit
                         </button>
@@ -518,7 +518,7 @@ Rules:
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => { setView('sets'); setActiveSetId(null) }}
-              className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium shrink-0"
+              className="text-sm text-teal-600 dark:text-teal-400 hover:underline font-medium shrink-0"
             >
               ← Sets
             </button>
@@ -555,7 +555,7 @@ Rules:
 
         {/* Set settings panel */}
         {showSetMeta && activeSet && (
-          <Card className="p-5 border-indigo-200 dark:border-indigo-800">
+          <Card className="p-5 border-teal-200 dark:border-teal-800">
             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Set Settings</h3>
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Name</label>
@@ -563,7 +563,7 @@ Rules:
                 type="text"
                 value={metaName}
                 onChange={e => setMetaName(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
             <div className="mb-4">
@@ -572,7 +572,7 @@ Rules:
                 {['📝','🧠','🔬','📐','🌍','📚','🎭','🏆','⭐','🎯','🔢','🌱'].map(e => (
                   <button key={e} type="button" onClick={() => setMetaEmoji(e)}
                     className={cn('w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-all',
-                      metaEmoji === e ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 scale-110' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                      metaEmoji === e ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 scale-110' : 'border-gray-200 dark:border-gray-700 hover:border-teal-300',
                     )}>{e}</button>
                 ))}
               </div>
@@ -584,8 +584,8 @@ Rules:
                   <button key={g} type="button" onClick={() => setMetaGrade(g)}
                     className={cn('px-3 py-1.5 rounded-lg border-2 text-xs font-semibold transition-all',
                       metaGrade === g
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-300',
+                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-teal-300',
                     )}>
                     {g === 'all' ? 'All grades' : `Grade ${g}`}
                   </button>
@@ -619,7 +619,7 @@ Rules:
                 rows={2}
                 placeholder="e.g. What is the capital of France?"
                 className={cn(
-                  'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                  'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500',
                   errors.question ? 'border-red-400' : 'border-gray-300 dark:border-gray-700',
                 )}
               />
@@ -660,7 +660,7 @@ Rules:
                     }}
                     placeholder={`Wrong answer ${i + 1}`}
                     className={cn(
-                      'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                      'w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500',
                       errors[`incorrect${i}` as 'incorrect0'] ? 'border-red-400' : 'border-gray-300 dark:border-gray-700',
                     )}
                   />
@@ -698,7 +698,7 @@ Rules:
                   onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
                   placeholder="https://example.com/image.png or leave blank"
                   className={cn(
-                    'flex-1 rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                    'flex-1 rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500',
                     errors.imageUrl ? 'border-red-400' : 'border-gray-300 dark:border-gray-700',
                   )}
                 />
@@ -750,7 +750,7 @@ Rules:
             </div>
             <button
               onClick={() => setShowAiPrompt(p => !p)}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ml-4"
+              className="text-xs text-teal-600 dark:text-teal-400 hover:underline shrink-0 ml-4"
             >
               {showAiPrompt ? '▾ Collapse' : '▸ Expand'}
             </button>
@@ -767,7 +767,7 @@ Rules:
                     value={aiSubject}
                     onChange={e => setAiSubject(e.target.value)}
                     placeholder="e.g. Science, History, Maths…"
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -777,7 +777,7 @@ Rules:
                     value={aiTopic}
                     onChange={e => setAiTopic(e.target.value)}
                     placeholder="e.g. The Solar System, World War II…"
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -788,7 +788,7 @@ Rules:
                   <select
                     value={aiGrade}
                     onChange={e => setAiGrade(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="K–2">K–2</option>
                     <option value="3–5">3–5</option>
@@ -801,7 +801,7 @@ Rules:
                   <select
                     value={aiCount}
                     onChange={e => setAiCount(Number(e.target.value))}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     {[5, 10, 15, 20, 25, 30].map(n => (
                       <option key={n} value={n}>{n}</option>
@@ -813,7 +813,7 @@ Rules:
                   <select
                     value={aiDifficulty}
                     onChange={e => setAiDifficulty(e.target.value as typeof aiDifficulty)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="mixed">Mixed</option>
                     <option value="easy">Easy</option>
@@ -826,7 +826,7 @@ Rules:
               {/* Generated prompt preview */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Your prompt</label>
-                <pre className="w-full rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-3 text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
+                <pre className="w-full rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 px-3 py-3 text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed max-h-48 overflow-y-auto">
                   {buildAiPrompt()}
                 </pre>
               </div>
@@ -849,7 +849,7 @@ Rules:
             <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">Import from JSON</h2>
             <button
               onClick={() => setShowImport(p => !p)}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="text-xs text-teal-600 dark:text-teal-400 hover:underline"
             >
               {showImport ? '▾ Collapse' : '▸ Expand'}
             </button>
@@ -870,7 +870,7 @@ Rules:
                 rows={6}
                 spellCheck={false}
                 placeholder={`[\n  {\n    "question": "What is 2 + 2?",\n    "correct": "4",\n    "incorrect": ["3", "5", "6"],\n    "difficulty": "easy"\n  }\n]`}
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-xs font-mono text-gray-800 dark:text-gray-200 resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 text-xs font-mono text-gray-800 dark:text-gray-200 resize-y focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
               {importError && <p className="text-xs text-red-500 font-medium">{importError}</p>}
               <Button size="sm" variant="primary" onClick={handleImport}>
@@ -895,7 +895,7 @@ Rules:
             {activeSet.questions.map((q, idx) => (
               <Card
                 key={q.id}
-                className={cn('p-4 transition-all', editingId === q.id && 'ring-2 ring-indigo-400')}
+                className={cn('p-4 transition-all', editingId === q.id && 'ring-2 ring-teal-400')}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col gap-0.5 shrink-0 mt-1">
@@ -927,7 +927,7 @@ Rules:
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button onClick={() => handleEdit(q)}
-                      className="text-xs px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors font-medium">
+                      className="text-xs px-2.5 py-1 rounded-lg border border-teal-200 dark:border-teal-800 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors font-medium">
                       Edit
                     </button>
                     <button onClick={() => handleDelete(q.id)}

@@ -166,6 +166,18 @@ export function DashboardClient({ initialSessions, displayName }: { initialSessi
           </Card>
         ) : (
           <>
+            {/* Quick-play banner */}
+            <button
+              onClick={() => router.push('/play')}
+              className="w-full flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white transition-colors text-left"
+            >
+              <div>
+                <p className="text-sm font-bold">Ready for another game?</p>
+                <p className="text-xs opacity-80 mt-0.5">Set up a new quiz for your class</p>
+              </div>
+              <span className="text-2xl shrink-0">▶</span>
+            </button>
+
             {/* Category strength */}
             <div className="space-y-3">
               <h2 className="text-base font-bold text-gray-800 dark:text-gray-200">Category breakdown</h2>
@@ -235,7 +247,7 @@ export function DashboardClient({ initialSessions, displayName }: { initialSessi
                           </div>
                           {s.finalPoints !== null && (
                             <div>
-                              <p className="text-base font-bold text-indigo-600 dark:text-indigo-400">{formatPoints(s.finalPoints)}</p>
+                              <p className="text-base font-bold text-teal-600 dark:text-teal-400">{formatPoints(s.finalPoints)}</p>
                               <p className="text-xs text-gray-500">Points</p>
                             </div>
                           )}

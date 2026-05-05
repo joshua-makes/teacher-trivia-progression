@@ -70,7 +70,7 @@ export function SignInForm() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold text-sm hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-60 shadow-sm"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold text-sm hover:border-teal-400 dark:hover:border-teal-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-60 shadow-sm"
           >
             <GoogleIcon />
             {googleLoading ? 'Redirecting…' : 'Continue with Google'}
@@ -81,7 +81,7 @@ export function SignInForm() {
             <button
               type="button"
               onClick={() => setShowEmail(true)}
-              className="mt-4 w-full text-sm text-center text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+              className="mt-4 w-full text-sm text-center text-gray-400 dark:text-gray-500 hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
             >
               Use email instead
             </button>
@@ -104,7 +104,7 @@ export function SignInForm() {
                     onChange={e => setEmail(e.target.value)}
                     required
                     autoComplete="email"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 <div>
@@ -118,7 +118,7 @@ export function SignInForm() {
                     required
                     minLength={6}
                     autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
                 {error && (
@@ -130,7 +130,7 @@ export function SignInForm() {
               </form>
               <button
                 onClick={() => { setMode(m => m === 'sign-in' ? 'sign-up' : 'sign-in'); setError(null) }}
-                className="mt-4 w-full text-sm text-center text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="mt-4 w-full text-sm text-center text-teal-600 dark:text-teal-400 hover:underline"
               >
                 {mode === 'sign-in' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
               </button>

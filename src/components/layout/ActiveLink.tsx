@@ -8,13 +8,14 @@ type Props = {
   href: string
   children: React.ReactNode
   className?: string
+  activeClassName?: string
   title?: string
   target?: string
   rel?: string
   exact?: boolean
 }
 
-export function ActiveLink({ href, children, className, exact = false, ...rest }: Props) {
+export function ActiveLink({ href, children, className, activeClassName, exact = false, ...rest }: Props) {
   const pathname = usePathname()
   const isActive = exact ? pathname === href : pathname.startsWith(href)
 
@@ -23,7 +24,7 @@ export function ActiveLink({ href, children, className, exact = false, ...rest }
       href={href}
       className={cn(
         className,
-        isActive && 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white',
+        isActive && (activeClassName ?? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'),
       )}
       aria-current={isActive ? 'page' : undefined}
       {...rest}

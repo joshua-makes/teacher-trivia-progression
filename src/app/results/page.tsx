@@ -236,6 +236,11 @@ export default function ResultsPage() {
       <Container>
         {completed && <Confetti />}
         <div className="max-w-2xl mx-auto space-y-6 py-4">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <a href="/play" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Play</a>
+            <span>/</span>
+            <span className="text-gray-600 dark:text-gray-400">Results</span>
+          </nav>
           <Card className="p-6 text-center">
             <div className="text-5xl mb-3">🏅</div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">Game Over!</h1>
@@ -287,7 +292,7 @@ export default function ResultsPage() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Game Stats</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                  <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
                     {Math.round(analytics.accuracy * 100)}%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Accuracy</p>
@@ -295,7 +300,7 @@ export default function ResultsPage() {
                 </div>
                 {analytics.avgTimeMs !== null && (
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                    <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
                       {(analytics.avgTimeMs / 1000).toFixed(1)}s
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Avg Response Time</p>
@@ -344,7 +349,7 @@ export default function ResultsPage() {
           <div className="flex flex-wrap gap-2 justify-center print:hidden">
             <button
               onClick={handleCopyTeam}
-              className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+              className="px-4 py-2 rounded-xl border-2 border-teal-300 dark:border-teal-700 text-teal-600 dark:text-teal-400 text-sm font-semibold hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors"
             >
               {copied ? '✓ Copied!' : '📋 Copy'}
             </button>
@@ -395,6 +400,11 @@ export default function ResultsPage() {
     <Container>
       {completed && <Confetti />}
       <div className="max-w-xl mx-auto space-y-6 py-4">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+          <a href="/play" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Play</a>
+          <span>/</span>
+          <span className="text-gray-600 dark:text-gray-400">Results</span>
+        </nav>
         <Card className="anim-scale-in p-6 text-center">
           <div className="text-6xl mb-3">{getLadderEmoji(rung, completed)}</div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -408,7 +418,7 @@ export default function ResultsPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {isWinner ? 'Top of the ladder!' : 'Points earned'}
           </p>
-          <p className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+          <p className="text-5xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
             {formatPoints(displayScore)}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -469,7 +479,7 @@ export default function ResultsPage() {
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Game Stats</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
                   {Math.round(soloAnalytics.accuracy * 100)}%
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Accuracy</p>
@@ -477,7 +487,7 @@ export default function ResultsPage() {
               </div>
               {soloAnalytics.avgTimeMs !== null && (
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
+                  <p className="text-3xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
                     {(soloAnalytics.avgTimeMs / 1000).toFixed(1)}s
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Avg Response Time</p>
@@ -508,7 +518,7 @@ export default function ResultsPage() {
               setTimeout(() => setCopied(false), 2500)
               toast.success('Copied to clipboard')
             }}
-            className="px-4 py-2 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+            className="px-4 py-2 rounded-xl border-2 border-teal-300 dark:border-teal-700 text-teal-600 dark:text-teal-400 text-sm font-semibold hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors"
           >
             {copied ? '✓ Copied!' : '📋 Copy'}
           </button>

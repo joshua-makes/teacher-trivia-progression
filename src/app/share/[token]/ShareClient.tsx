@@ -42,7 +42,7 @@ export function ShareClient({ preview }: { preview: SharedSetPreview }) {
           </p>
           <div className="flex gap-3 justify-center">
             <Button variant="primary" onClick={() => router.push('/questions')}>View my sets</Button>
-            <Button variant="secondary" onClick={() => router.push('/')}>Play now</Button>
+            <Button variant="secondary" onClick={() => router.push('/play')}>Play now</Button>
           </div>
         </div>
       </Container>
@@ -93,7 +93,7 @@ export function ShareClient({ preview }: { preview: SharedSetPreview }) {
           <Button variant="primary" onClick={handleImport}>
             ＋ Add to my sets
           </Button>
-          <Button variant="secondary" onClick={() => router.push('/')}>
+          <Button variant="secondary" onClick={() => router.push('/play')}>
             Maybe later
           </Button>
         </div>

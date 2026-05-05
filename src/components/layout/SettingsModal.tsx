@@ -65,7 +65,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
         {/* Timer overrides */}
         <section className="mb-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
             Default Timer (seconds)
           </h3>
           <div className="space-y-2">
@@ -85,7 +85,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                     placeholder={placeholder}
                     value={override ?? ''}
                     onChange={e => setTimerOverride(gl.value, e.target.value)}
-                    className="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-2.5 py-1.5 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-2.5 py-1.5 tabular-nums focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               )
@@ -96,7 +96,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
         {/* Team point values */}
         <section className="mb-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
             Team Mode Points per Question
           </h3>
           <div className="space-y-2">
@@ -118,7 +118,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                     step={50}
                     value={settings.teamPoints[diff]}
                     onChange={e => setTeamPoints(diff, e.target.value)}
-                    className="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-2.5 py-1.5 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-2.5 py-1.5 tabular-nums focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               )
@@ -134,7 +134,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               role="switch"
               aria-checked={settings.wrongAnswerPenalty}
               onClick={() => setSettings(s => ({ ...s, wrongAnswerPenalty: !s.wrongAnswerPenalty }))}
-              className={`relative shrink-0 w-10 h-5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${settings.wrongAnswerPenalty ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+              className={`relative shrink-0 w-10 h-5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${settings.wrongAnswerPenalty ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings.wrongAnswerPenalty ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
@@ -143,7 +143,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
         {/* Adaptive difficulty */}
         <section className="mb-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-3">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-3">
             Gameplay
           </h3>
           <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
@@ -156,7 +156,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               role="switch"
               aria-checked={settings.adaptiveDifficulty}
               onClick={() => setSettings(s => ({ ...s, adaptiveDifficulty: !s.adaptiveDifficulty }))}
-              className={`relative shrink-0 w-10 h-5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${settings.adaptiveDifficulty ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+              className={`relative shrink-0 w-10 h-5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${settings.adaptiveDifficulty ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600'}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings.adaptiveDifficulty ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
@@ -172,7 +172,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+            className="flex-1 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors"
           >
             Save
           </button>

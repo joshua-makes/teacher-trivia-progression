@@ -51,7 +51,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                   try { localStorage.removeItem('trivia_session') } catch { /* ignore */ }
                   window.location.href = '/'
                 }}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+                className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold transition-colors"
               >
                 🏠 Go Home
               </button>

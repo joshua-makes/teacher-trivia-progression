@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
+import NextTopLoader from 'nextjs-toploader'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -9,7 +10,7 @@ import { ThemeProvider, themeScript } from '@/components/layout/ThemeProvider'
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
 export const viewport: Viewport = {
-  themeColor: '#6366f1',
+  themeColor: '#14b8a6',
 }
 
 export const metadata: Metadata = {
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${plusJakartaSans.variable} font-sans`}>
         <ThemeProvider>
+          <NextTopLoader color="#14b8a6" height={3} showSpinner={false} />
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1">{children}</main>
