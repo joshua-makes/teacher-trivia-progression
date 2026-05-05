@@ -128,7 +128,7 @@ export function DashboardClient({ initialSessions }: { initialSessions: GameSess
                 ⬇ Export CSV
               </Button>
             )}
-            <Button variant="primary" size="sm" onClick={() => router.push('/')}>
+            <Button variant="primary" size="sm" onClick={() => router.push('/play')}>
               + New Game
             </Button>
           </div>

@@ -25,13 +25,20 @@ export async function Header() {
           <span className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-white">Ladder Quiz</span>
         </Link>
         <div className="flex items-center gap-1">
+          <Link
+            href="/play"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title="Start a new game"
+          >
+            ▶ Play
+          </Link>
           {user && (
             <Link
               href="/dashboard"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="View your class game history"
             >
-              ?? Dashboard
+              📊 Dashboard
             </Link>
           )}
           <Link
@@ -39,7 +46,7 @@ export async function Header() {
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Manage your custom question bank"
           >
-            ?? Questions
+            ✏️ Questions
           </Link>
           <Link
             href="/teacher"
@@ -48,7 +55,7 @@ export async function Header() {
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Open teacher view in a new window"
           >
-            ?? Teacher
+            👁 Teacher
           </Link>
           <FullscreenButton />
           <SettingsButton />

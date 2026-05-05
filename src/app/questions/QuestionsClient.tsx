@@ -471,7 +471,7 @@ Rules:
                           ✏️ Edit
                         </button>
                         <button
-                          onClick={() => router.push(`/?setId=${set.id}`)}
+                          onClick={() => router.push(`/play?setId=${set.id}`)}
                           disabled={set.questions.length === 0}
                           className="text-xs px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
                         >
@@ -545,7 +545,7 @@ Rules:
                 <Button variant="secondary" size="sm" onClick={() => exportCustomQuestionsAsFile(activeSet.questions)}>
                   ⬇ Export
                 </Button>
-                <Button variant="primary" size="sm" onClick={() => router.push(`/?setId=${activeSet.id}`)}>
+                <Button variant="primary" size="sm" onClick={() => router.push(`/play?setId=${activeSet.id}`)}>
                   🚀 Play
                 </Button>
               </>
@@ -943,7 +943,7 @@ Rules:
 
         {activeSet && activeSet.questions.length > 0 && (
           <div className="flex justify-center pb-6">
-            <Button variant="primary" size="lg" onClick={() => router.push(`/?setId=${activeSet.id}`)} className="px-10">
+            <Button variant="primary" size="lg" onClick={() => router.push(`/play?setId=${activeSet.id}`)} className="px-10">
               🚀 Play This Set
             </Button>
           </div>
