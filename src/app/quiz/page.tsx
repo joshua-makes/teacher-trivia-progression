@@ -837,14 +837,14 @@ export default function QuizPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowShortcuts(true)}
-                  className="p-1.5 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
+                  className="hidden sm:flex p-2 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
                   title="Keyboard shortcuts (?)"
                   aria-label="Show keyboard shortcuts"
                 >?
                 </button>
                 <button
                   onClick={() => setIsPaused(p => !p)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   title="Pause (P)"
                   aria-label={isPaused ? 'Resume' : 'Pause'}
                 >
@@ -855,7 +855,7 @@ export default function QuizPage() {
                     ⏭ Skip
                   </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                <Button variant="ghost" size="sm" onClick={() => router.push('/play')}>
                   ✕ End Game
                 </Button>
               </div>
@@ -884,7 +884,7 @@ export default function QuizPage() {
                 >
                   Show Question
                 </Button>
-                <p className="text-xs text-gray-600">
+                <p className="hidden sm:block text-xs text-gray-600">
                   Press{' '}
                   <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-xs border border-gray-700">Space</kbd>
                   {' '}to reveal
@@ -1003,7 +1003,7 @@ export default function QuizPage() {
                         )
                       })}
                     </div>
-                    <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-2">
+                    <p className="hidden sm:block text-center text-xs text-gray-400 dark:text-gray-600 mt-2">
                       Press <kbd className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-mono text-xs">1</kbd>–<kbd className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-mono text-xs">{teams.length}</kbd> to buzz in
                     </p>
                   </div>
@@ -1100,20 +1100,20 @@ export default function QuizPage() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowShortcuts(true)}
-                className="p-1.5 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
+                className="hidden sm:flex p-2 rounded-lg text-xs text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-mono font-bold"
                 title="Keyboard shortcuts (?)"
                 aria-label="Show keyboard shortcuts"
               >?
               </button>
               <button
                 onClick={() => setIsPaused(p => !p)}
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 title="Pause (P)"
                 aria-label={isPaused ? 'Resume' : 'Pause'}
               >
                 {isPaused ? '▶️' : '⏸️'}
               </button>
-              <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+              <Button variant="ghost" size="sm" onClick={() => router.push('/play')}>
                 ✕ End Game
               </Button>
             </div>
@@ -1136,7 +1136,7 @@ export default function QuizPage() {
               <Button size="lg" onClick={() => setIsSoloRevealed(true)} className="px-10">
                 Show Question
               </Button>
-              <p className="text-xs text-gray-600">
+              <p className="hidden sm:block text-xs text-gray-600">
                 Press{' '}
                 <kbd className="px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 font-mono text-xs border border-gray-700">Space</kbd>
                 {' '}or{' '}

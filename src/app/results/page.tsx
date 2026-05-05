@@ -9,7 +9,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { loadSession, clearSession, createSession, saveSession, getPersonalBest, savePersonalBest, type Team, type QuestionHistoryItem } from '@/lib/session'
 import { CATEGORIES } from '@/lib/data/categories'
 import { loadQuestionSets } from '@/lib/customQuestions'
-import { LADDER, formatPoints, getSafeZonePoints } from '@/lib/ladder'
+import { buildLadder, formatPoints, getSafeZonePoints } from '@/lib/ladder'
 import { cn } from '@/lib/utils'
 import { Confetti } from '@/components/ui/Confetti'
 import { buildExportPayload, exportResultsAsJSON, exportResultsAsCSV } from '@/lib/exportResults'
@@ -38,14 +38,15 @@ function getLadderEmoji(rung: number, completed: boolean): string {
   return '📚'
 }
 
-function computeAnalytics(history: QuestionHistoryItem[]) {
-  const total = history.length
+function computeAnalytics(history: QuestionHistoryItem[], outOf?: number) {
+  const attempted = history.length
   const correct = history.filter(h => h.correct).length
+  const total = outOf ?? attempted
   const timed = history.filter(h => h.timeTakenMs !== undefined && h.timeTakenMs > 0)
   const avgTimeMs = timed.length > 0
     ? timed.reduce((sum, h) => sum + (h.timeTakenMs ?? 0), 0) / timed.length
     : null
-  return { total, correct, accuracy: total > 0 ? correct / total : 0, avgTimeMs }
+  return { total, attempted, correct, accuracy: total > 0 ? correct / total : 0, avgTimeMs }
 }
 
 export default function ResultsPage() {
@@ -191,7 +192,7 @@ export default function ResultsPage() {
     const sorted = [...teams].sort((a, b) => b.score - a.score)
     const winner = sorted[0]
     const maxScore = winner?.score ?? 1
-    const analytics = computeAnalytics(questionHistory)
+    const analytics = computeAnalytics(questionHistory, questionCount)
 
     function handleCopyTeam() {
       const scoreLines = sorted
@@ -383,11 +384,12 @@ export default function ResultsPage() {
   }
 
   // ── Solo results ──────────────────────────────────────
-  const points = finalPoints ?? getSafeZonePoints(rung)
+  const soloLadder = buildLadder(questionCount)
+  const soloAnalytics = computeAnalytics(questionHistory, questionCount)
+  const points = finalPoints ?? getSafeZonePoints(rung, soloLadder)
   const isWinner = completed
-  const rungData = LADDER[rung - 1]
+  const rungData = soloLadder[rung - 1]
   const levelsReached = completed ? questionCount : rung - 1
-  const soloAnalytics = computeAnalytics(questionHistory)
 
   return (
     <Container>
@@ -433,7 +435,7 @@ export default function ResultsPage() {
         <Card className="p-5">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ladder Progress</h2>
           <div className="space-y-1.5">
-            {LADDER.slice(0, questionCount).map(r => {
+            {soloLadder.map(r => {
               const reached = r.number <= levelsReached
               const isFinal = r.number === levelsReached && !isWinner
               return (

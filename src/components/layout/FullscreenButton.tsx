@@ -28,7 +28,7 @@ export function FullscreenButton() {
       onClick={toggle}
       aria-label={isFs ? 'Exit fullscreen' : 'Enter fullscreen'}
       title={isFs ? 'Exit fullscreen' : 'Enter fullscreen'}
-      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+      className="hidden sm:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
     >
       {isFs ? (
         // Compress / exit fullscreen icon
