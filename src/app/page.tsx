@@ -44,7 +44,7 @@ export default async function LandingPage() {
 
   return (
     <Container>
-      <div className="max-w-3xl mx-auto">
+      <div>
 
         {/* Hero */}
         <div className="rounded-3xl bg-gray-900 border border-gray-800 text-center py-16 px-8 mt-6 mb-10 shadow-xl relative overflow-hidden">
@@ -75,7 +75,7 @@ export default async function LandingPage() {
                 class will love
               </span>
             </h1>
-            <p className="text-gray-400 text-lg max-w-md mx-auto leading-relaxed mb-8">
+            <p className="text-gray-400 text-lg max-w-lg mx-auto leading-relaxed mb-8">
               Ladder-style trivia for K–12. Questions climb in difficulty — play solo or split into teams.
             </p>
 

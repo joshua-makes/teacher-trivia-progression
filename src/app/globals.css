@@ -10,10 +10,10 @@
 
 @layer base {
   :root {
-    --dot-color: #e5e7eb;
+    --dot-color: #c8cdd5;
   }
   .dark {
-    --dot-color: #1e293b;
+    --dot-color: #2a3546;
   }
   html {
     @apply antialiased;
