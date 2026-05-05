@@ -88,7 +88,7 @@ function exportCSV(sessions: GameSessionRecord[]) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function DashboardClient({ initialSessions }: { initialSessions: GameSessionRecord[] }) {
+export function DashboardClient({ initialSessions, displayName }: { initialSessions: GameSessionRecord[], displayName?: string | null }) {
   const router = useRouter()
   const [sessions, setSessions] = useState<GameSessionRecord[]>(initialSessions)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -119,7 +119,9 @@ export function DashboardClient({ initialSessions }: { initialSessions: GameSess
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Teacher Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {displayName ? `Welcome back, ${displayName.split(' ')[0]}` : 'Teacher Dashboard'}
+            </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Your class game history</p>
           </div>
           <div className="flex gap-2">
@@ -156,6 +158,11 @@ export function DashboardClient({ initialSessions }: { initialSessions: GameSess
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Finish a game while signed in and it will appear here automatically.
             </p>
+            <div className="pt-2">
+              <Button variant="primary" onClick={() => router.push('/play')}>
+                Play your first game →
+              </Button>
+            </div>
           </Card>
         ) : (
           <>

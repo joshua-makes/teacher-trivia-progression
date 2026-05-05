@@ -1,7 +1,7 @@
 ﻿import Link from 'next/link'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/Container'
-import { Button } from '@/components/ui/Button'
 
 const FEATURES = [
   {
@@ -26,7 +26,10 @@ const FEATURES = [
   },
 ]
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <Container>
       <div className="max-w-3xl mx-auto">
@@ -50,17 +53,27 @@ export default function LandingPage() {
               Classroom trivia for K&ndash;12. Questions that climb in difficulty &mdash; solo or team mode.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="primary" size="lg" className="px-10">
-                <Link href="/play" className="flex items-center gap-2">
-                  Start a Game
-                </Link>
-              </Button>
               <Link
-                href="/sign-in"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white font-semibold text-base transition-all"
+                href="/play"
+                className="inline-flex items-center justify-center gap-2 px-10 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-base transition-all shadow-lg shadow-indigo-500/30"
               >
-                Sign in
+                Start a Game
               </Link>
+              {user ? (
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white font-semibold text-base transition-all"
+                >
+                  My Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/sign-in"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border-2 border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white font-semibold text-base transition-all"
+                >
+                  Sign in
+                </Link>
+              )}
             </div>
           </div>
         </div>

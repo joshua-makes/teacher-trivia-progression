@@ -71,7 +71,7 @@ export default function ResultsPage() {
 
   useEffect(() => {
     const session = loadSession()
-    if (!session) { router.push('/'); return }
+    if (!session) { router.push('/play'); return }
 
     setMode(session.mode)
     setCompleted(session.completed)
@@ -165,11 +165,11 @@ export default function ResultsPage() {
 
   function handlePlayAgain() {
     clearSession()
-    router.push('/')
+    router.push('/play')
   }
 
   function handlePlayAgainSame() {
-    if (!replaySession) { router.push('/'); return }
+    if (!replaySession) { router.push('/play'); return }
     // Re-create a fresh session with the same settings
     const fresh = createSession(
       replaySession.categoryId,
@@ -581,7 +581,7 @@ export default function ResultsPage() {
               </Button>
             )}
             <Button variant="secondary" size="lg" onClick={handlePlayAgain} className="px-8">
-              🏠 New Game
+              Change Settings
             </Button>
           </div>
         </div>

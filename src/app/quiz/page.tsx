@@ -670,7 +670,7 @@ export default function QuizPage() {
       <Container>
         <Card className="p-6 text-center max-w-md mx-auto mt-8">
           <p className="text-red-500 mb-4">Failed to load questions. Please try again.</p>
-          <Button onClick={() => router.push('/')}>Back to Home</Button>
+          <Button onClick={() => router.push('/play')}>Back to Play</Button>
         </Card>
       </Container>
     )

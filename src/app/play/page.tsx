@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -93,6 +94,7 @@ export default function PlayPage() {
   const [customSets, setCustomSets] = useState<QuestionSet[]>([])
   const [selectedSetId, setSelectedSetId] = useState<string | null>(null)
   const [showTimers, setShowTimers] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
 
   // Read adaptive difficulty from persistent settings (configured via ⚙️ modal)
   const adaptiveDifficulty = (() => {
@@ -126,6 +128,10 @@ export default function PlayPage() {
       setCategoryId(0)
       setSelectedSetId(setId)
     }
+    // Check auth state
+    createClient().auth.getSession().then(({ data }) => {
+      setIsSignedIn(!!data.session)
+    })
   }, [])
 
   const filteredCategories = CATEGORIES.filter(c => c.gradeLevels.includes(gradeLevel))
@@ -182,6 +188,10 @@ export default function PlayPage() {
   return (
     <Container>
       <div className="max-w-3xl mx-auto">
+        <div className="pt-6 pb-2">
+          <h1 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Set up a game</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Choose your grade, category, and mode — then launch.</p>
+        </div>
         {/* Continue game banner */}
         {resumableSession && (() => {
           const cat = CATEGORIES.find(c => c.id === resumableSession.categoryId)
@@ -377,12 +387,20 @@ export default function PlayPage() {
                   <button onClick={() => router.push('/questions')} className="underline hover:text-indigo-500">manage sets →</button>
                 </p>
               ) : (
-                <button
-                  onClick={() => router.push('/questions')}
-                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-                >
-                  ✏️ Create a custom question set →
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => router.push('/questions')}
+                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    ✏️ Create a custom question set →
+                  </button>
+                  {!isSignedIn && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      <button onClick={() => router.push('/sign-in?next=/play')} className="underline hover:text-indigo-500">Sign in</button>
+                      {' '}to sync your question sets across devices.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </Card>

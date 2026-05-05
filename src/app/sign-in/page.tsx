@@ -22,12 +22,14 @@ function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const oauthError = searchParams.get('error') === 'oauth'
+  const next = searchParams.get('next') ?? '/dashboard'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
   const [error, setError] = useState<string | null>(oauthError ? 'Google sign-in failed. Please try again.' : null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showEmail, setShowEmail] = useState(false)
 
   async function handleGoogleSignIn() {
     setGoogleLoading(true)
@@ -35,10 +37,9 @@ function SignInForm() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     })
-    // Browser redirects — no need to setGoogleLoading(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -51,7 +52,7 @@ function SignInForm() {
       : await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) { setError(error.message); return }
-    router.push('/dashboard')
+    router.push(next)
     router.refresh()
   }
 
@@ -59,68 +60,82 @@ function SignInForm() {
     <Container>
       <div className="max-w-sm mx-auto py-20">
         <Card className="p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center">
             {mode === 'sign-in' ? 'Sign in' : 'Create account'}
           </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">to Ladder Quiz</p>
 
-          {/* Google OAuth */}
+          {/* Google OAuth — primary CTA */}
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold text-sm hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-semibold text-sm hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-60 shadow-sm"
           >
             <GoogleIcon />
             {googleLoading ? 'Redirecting…' : 'Continue with Google'}
           </button>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">or</span>
-            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-          </div>
+          {/* Email toggle */}
+          {!showEmail ? (
+            <button
+              type="button"
+              onClick={() => setShowEmail(true)}
+              className="mt-4 w-full text-sm text-center text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+            >
+              Use email instead
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">or email</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            )}
-            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
-              {loading ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
-            </Button>
-          </form>
-          <button
-            onClick={() => { setMode(m => m === 'sign-in' ? 'sign-up' : 'sign-in'); setError(null) }}
-            className="mt-4 w-full text-sm text-center text-indigo-600 dark:text-indigo-400 hover:underline"
-          >
-            {mode === 'sign-in' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-          </button>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                )}
+                <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+                  {loading ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
+                </Button>
+              </form>
+              <button
+                onClick={() => { setMode(m => m === 'sign-in' ? 'sign-up' : 'sign-in'); setError(null) }}
+                className="mt-4 w-full text-sm text-center text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                {mode === 'sign-in' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              </button>
+            </>
+          )}
         </Card>
       </div>
     </Container>

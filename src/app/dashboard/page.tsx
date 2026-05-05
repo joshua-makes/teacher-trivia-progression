@@ -6,8 +6,9 @@ import { DashboardClient } from './DashboardClient'
 export default async function TeacherDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect('/sign-in?next=/dashboard')
 
   const sessions = await getGameSessions()
-  return <DashboardClient initialSessions={sessions} />
+  const displayName = user.user_metadata?.full_name ?? user.email ?? null
+  return <DashboardClient initialSessions={sessions} displayName={displayName} />
 }

@@ -28,7 +28,9 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // next must start with / to prevent open redirect
+      const safeNext = next.startsWith('/') ? next : '/dashboard'
+      return NextResponse.redirect(`${origin}${safeNext}`)
     }
   }
 
