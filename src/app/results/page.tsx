@@ -53,96 +53,96 @@ export default function ResultsPage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const savedRef = useRef(false)
-  const [mode, setMode] = useState<'solo' | 'team' | null>(null)
-  const [completed, setCompleted] = useState(false)
-  const [finalPoints, setFinalPoints] = useState<number | null>(null)
-  const [rung, setRung] = useState(1)
-  const [teams, setTeams] = useState<Team[]>([])
-  const [categoryName, setCategoryName] = useState('')
-  const [gradeLevel, setGradeLevel] = useState<GradeLevel>('3-5')
-  const [loading, setLoading] = useState(true)
-  const [questionHistory, setQuestionHistory] = useState<QuestionHistoryItem[]>([])
   const [copied, setCopied] = useState(false)
-  const [questionCount, setQuestionCount] = useState(15)
   const [displayScore, setDisplayScore] = useState(0)
-  const [isNewBest, setIsNewBest] = useState(false)
-  const [prevBest, setPrevBest] = useState<number | null>(null)
-  // Store session snapshot for "Play again (same settings)"
-  const [replaySession, setReplaySession] = useState<ReturnType<typeof loadSession>>(null)
 
-  useEffect(() => {
+  // Read everything from localStorage synchronously on first render — no loading spinner needed
+  const [snap] = useState<{
+    session: NonNullable<ReturnType<typeof loadSession>>
+    mode: 'solo' | 'team'
+    completed: boolean
+    finalPoints: number | null
+    rung: number
+    teams: Team[]
+    categoryName: string
+    gradeLevel: GradeLevel
+    questionHistory: QuestionHistoryItem[]
+    questionCount: number
+    isNewBest: boolean
+    prevBest: number | null
+  } | null>(() => {
+    if (typeof window === 'undefined') return null
     const session = loadSession()
-    if (!session) { router.push('/play'); return }
+    if (!session) return null
 
-    setMode(session.mode)
-    setCompleted(session.completed)
-    setFinalPoints(session.finalPoints)
-    setRung(session.currentRung ?? 1)
-    setTeams(session.teams ?? [])
-    const cat = CATEGORIES.find(c => c.id === session.categoryId)
-    if (session.categoryId === 0) {
-      const sets = loadQuestionSets()
-      const set = sets.find(s => s.id === session.customSetId)
-      setCategoryName(set?.name ?? 'Custom Questions')
-    } else {
-      setCategoryName(cat?.name ?? 'General Knowledge')
-    }
-    setQuestionHistory(session.questionHistory ?? [])
-    setQuestionCount(session.questionCount ?? 15)
-    setGradeLevel(session.gradeLevel ?? '3-5')
-    setReplaySession(session)
+    const sets = session.categoryId === 0 ? loadQuestionSets() : []
+    const catName = session.categoryId === 0
+      ? (sets.find(s => s.id === session.customSetId)?.name ?? 'Custom Questions')
+      : (CATEGORIES.find(c => c.id === session.categoryId)?.name ?? 'General Knowledge')
 
-    // Save to cloud history immediately — server action handles unauthenticated gracefully
-    if (!savedRef.current) {
-      savedRef.current = true
-      const history = session.questionHistory ?? []
-      const correct = history.filter(h => h.correct).length
-      let catName = ''
-      let customSetName: string | null = null
-      if (session.categoryId === 0) {
-        const sets = loadQuestionSets()
-        customSetName = sets.find(s => s.id === session.customSetId)?.name ?? 'Custom Questions'
-        catName = customSetName
-      } else {
-        catName = CATEGORIES.find(c => c.id === session.categoryId)?.name ?? 'General Knowledge'
-      }
-      startTransition(async () => {
-        try {
-          await saveGameSession({
-            mode: session.mode,
-            gradeLevel: session.gradeLevel,
-            categoryId: session.categoryId,
-            categoryName: catName,
-            customSetName,
-            finalPoints: session.finalPoints,
-            completed: session.completed,
-            rungReached: session.currentRung ?? 1,
-            questionCount: history.length,
-            correctCount: correct,
-            accuracy: history.length > 0 ? correct / history.length : 0,
-            questionHistory: history,
-          })
-          toast.success('Game saved to your dashboard')
-        } catch {
-          // Silently ignore — unauthenticated or network error
-        }
-      })
-    }
+    let isNewBest = false
+    let prevBest: number | null = null
     if (session.mode === 'solo') {
       const score = session.finalPoints !== null ? session.finalPoints : getSafeZonePoints(session.currentRung ?? 1)
-      const prev = getPersonalBest(session.categoryId, session.gradeLevel)
-      setPrevBest(prev)
-      const isNew = savePersonalBest(session.categoryId, session.gradeLevel, score)
-      setIsNewBest(isNew)
+      prevBest = getPersonalBest(session.categoryId, session.gradeLevel)
+      isNewBest = savePersonalBest(session.categoryId, session.gradeLevel, score)
     }
 
-    setLoading(false)
-  }, [router])
+    return {
+      session,
+      mode: session.mode,
+      completed: session.completed,
+      finalPoints: session.finalPoints,
+      rung: session.currentRung ?? 1,
+      teams: session.teams ?? [],
+      categoryName: catName,
+      gradeLevel: session.gradeLevel ?? '3-5',
+      questionHistory: session.questionHistory ?? [],
+      questionCount: session.questionCount ?? 15,
+      isNewBest,
+      prevBest,
+    }
+  })
 
-  // Animate score counting up once loaded
+  // Redirect if no session
   useEffect(() => {
-    if (loading || mode !== 'solo') return
-    const target = finalPoints !== null ? finalPoints : getSafeZonePoints(rung)
+    if (!snap) router.push('/play')
+  }, [snap, router])
+
+  // Save to cloud once (fire-and-forget)
+  useEffect(() => {
+    if (!snap || savedRef.current) return
+    savedRef.current = true
+    const { session, categoryName, questionHistory: history } = snap
+    const correct = history.filter(h => h.correct).length
+    const customSetName = session.categoryId === 0 ? snap.categoryName : null
+    startTransition(async () => {
+      try {
+        await saveGameSession({
+          mode: session.mode,
+          gradeLevel: session.gradeLevel,
+          categoryId: session.categoryId,
+          categoryName,
+          customSetName,
+          finalPoints: session.finalPoints,
+          completed: session.completed,
+          rungReached: session.currentRung ?? 1,
+          questionCount: history.length,
+          correctCount: correct,
+          accuracy: history.length > 0 ? correct / history.length : 0,
+          questionHistory: history,
+        })
+        toast.success('Game saved to your dashboard')
+      } catch {
+        // Silently ignore — unauthenticated or network error
+      }
+    })
+  }, [snap])
+
+  // Animate score counting up
+  useEffect(() => {
+    if (!snap || snap.mode !== 'solo') return
+    const target = snap.finalPoints !== null ? snap.finalPoints : getSafeZonePoints(snap.rung)
     if (target === 0) { setDisplayScore(0); return }
     let current = 0
     const increment = Math.max(50, Math.ceil(target / 35))
@@ -152,17 +152,12 @@ export default function ResultsPage() {
       if (current >= target) clearInterval(timer)
     }, 25)
     return () => clearInterval(timer)
-  }, [loading, finalPoints, rung, mode])
+  }, [snap])
 
-  if (loading) {
-    return (
-      <Container>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-5xl animate-pulse">⏳</div>
-        </div>
-      </Container>
-    )
-  }
+  if (!snap) return null  // redirect handled in useEffect above
+
+  const { mode, completed, finalPoints, rung, teams, categoryName, gradeLevel,
+          questionHistory, questionCount, isNewBest, prevBest, session: replaySession } = snap
 
   function handlePlayAgain() {
     clearSession()
@@ -170,7 +165,6 @@ export default function ResultsPage() {
   }
 
   function handlePlayAgainSame() {
-    if (!replaySession) { router.push('/play'); return }
     // Re-create a fresh session with the same settings
     const fresh = createSession(
       replaySession.categoryId,
@@ -587,11 +581,9 @@ export default function ResultsPage() {
             <p className="text-center text-xs text-gray-400 dark:text-gray-500">💾 Saving to dashboard…</p>
           )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            {replaySession && (
-              <Button variant="primary" size="lg" onClick={handlePlayAgainSame} className="px-8">
-                🔄 Play Again (same)
-              </Button>
-            )}
+            <Button variant="primary" size="lg" onClick={handlePlayAgainSame} className="px-8">
+              🔄 Play Again (same)
+            </Button>
             <Button variant="secondary" size="lg" onClick={handlePlayAgain} className="px-8">
               Change Settings
             </Button>
