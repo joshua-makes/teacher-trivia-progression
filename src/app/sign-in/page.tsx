@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Container } from '@/components/layout/Container'
@@ -18,7 +18,7 @@ function GoogleIcon() {
   )
 }
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const oauthError = searchParams.get('error') === 'oauth'
@@ -124,5 +124,13 @@ export default function SignInPage() {
         </Card>
       </div>
     </Container>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInForm />
+    </Suspense>
   )
 }
