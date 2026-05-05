@@ -127,9 +127,9 @@ export default function ResultsPage() {
           finalPoints: session.finalPoints,
           completed: session.completed,
           rungReached: session.currentRung ?? 1,
-          questionCount: history.length,
+          questionCount: session.questionCount ?? history.length,
           correctCount: correct,
-          accuracy: history.length > 0 ? correct / history.length : 0,
+          accuracy: (session.questionCount ?? history.length) > 0 ? correct / (session.questionCount ?? history.length) : 0,
           questionHistory: history,
         })
         toast.success('Game saved to your dashboard')
