@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ThemeToggle } from './ThemeToggle'
-import { SettingsButton } from './SettingsButton'
+import { UserMenu } from './UserMenu'
 import { MobileNav } from './MobileNav'
 import { ActiveLink } from './ActiveLink'
 
@@ -99,28 +99,11 @@ export async function Header() {
           <div className="hidden sm:block h-5 w-px bg-gray-200 dark:bg-gray-700 mx-1" aria-hidden="true" />
 
           {/* Utility buttons */}
-          <SettingsButton />
           <ThemeToggle />
 
           {/* User section */}
           {user ? (
-            <div className="hidden sm:flex items-center gap-1 ml-0.5">
-              <div
-                className="w-7 h-7 rounded-full bg-teal-600 text-white text-xs font-bold flex items-center justify-center select-none shrink-0"
-                title={displayName}
-                aria-label={`Signed in as ${displayName}`}
-              >
-                {displayName[0]?.toUpperCase()}
-              </div>
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="px-2.5 py-1.5 rounded-lg text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
+            <UserMenu displayName={displayName} onSignOut={signOut} />
           ) : (
             <Link
               href="/sign-in"

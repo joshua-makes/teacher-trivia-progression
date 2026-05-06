@@ -221,7 +221,7 @@ export function PlayClient({ isSignedIn }: { isSignedIn: boolean }) {
         })()}
 
         {/* Page heading */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm py-7 px-6">
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">Set up a game</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Pick a grade, category, and mode — then launch.</p>
         </div>
